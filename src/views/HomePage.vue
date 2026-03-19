@@ -104,7 +104,7 @@ function navigateToPlayer(steamId: string) {
         </BaseButton>
       </div>
     </section>
-
+  <!--
     <section v-if="loading || staffGroups.length > 0" class="section">
       <h2 class="section__title">Our Team</h2>
       <template v-if="loading">
@@ -142,6 +142,7 @@ function navigateToPlayer(steamId: string) {
         </div>
       </template>
     </section>
+    -->
 
     <footer class="home-footer">
       <p class="home-footer__text">
