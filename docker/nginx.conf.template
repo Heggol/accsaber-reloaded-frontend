@@ -67,6 +67,7 @@ http {
             proxy_ssl_server_name on;
             proxy_read_timeout 86400s;
             proxy_send_timeout 86400s;
+            include /etc/nginx/security-headers.conf;
         }
 
         location /assets/ {
