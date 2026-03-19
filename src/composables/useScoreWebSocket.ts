@@ -19,7 +19,8 @@ function buildWsUrl(): string {
     const wsProtocol = parsed.protocol === 'https:' ? 'wss:' : 'ws:'
     return `${wsProtocol}//${parsed.host}/ws/scores`
   } catch {
-    return `wss://${window.location.host}/ws/scores`
+    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+    return `${wsProtocol}//${window.location.host}/ws/scores`
   }
 }
 
