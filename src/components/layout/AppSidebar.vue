@@ -30,10 +30,10 @@ const navItems = [
   { to: '/', label: 'Home', icon: 'home' },
   { to: '/leaderboards', label: 'Leaderboards', icon: 'leaderboard' },
   { to: '/maps', label: 'Maps', icon: 'map' },
+  { to: '/milestones', label: 'Milestones', icon: 'milestone' },
 //  { to: '/ranked-queue', label: 'Ranked Queue', icon: 'queue' },
 //  { to: '/stats', label: 'Stats', icon: 'stats' },
   { to: '/score-feed', label: 'Score Feed', icon: 'feed' },
-//  { to: '/milestones', label: 'Milestones', icon: 'milestone' },
 //  { to: '/campaigns', label: 'Campaigns', icon: 'campaign' },
 //  { to: '/whats-new', label: "What's New", icon: 'news' },
 ]
