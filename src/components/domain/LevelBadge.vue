@@ -20,6 +20,7 @@ const progressPercent = computed(() => {
   if (props.requiredXp <= 0) return 100
   return Math.min((props.currentXp / props.requiredXp) * 100, 100)
 })
+
 </script>
 
 <template>

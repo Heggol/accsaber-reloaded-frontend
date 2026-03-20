@@ -158,8 +158,15 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
       </div>
 
       <div class="profile-hero">
-        <LevelBadge :level="level?.level ?? 0" :current-xp="level?.xpForCurrentLevel ?? 0"
-          :required-xp="level?.xpForNextLevel ?? 1" :avatar-url="user.avatarUrl" :title="level?.title" />
+        <div class="profile-hero__level-col">
+          <LevelBadge :level="level?.level ?? 0" :current-xp="level?.xpForCurrentLevel ?? 0"
+            :required-xp="level?.xpForNextLevel ?? 1" :avatar-url="user.avatarUrl" :title="level?.title" />
+          <span v-if="statsDiff?.scoreXpDiff" class="profile-hero__xp-trend"
+            :class="statsDiff.scoreXpDiff > 0 ? 'profile-hero__xp-trend--up' : 'profile-hero__xp-trend--down'">
+            {{ statsDiff.scoreXpDiff > 0 ? '\u25B2' : '\u25BC' }}
+            {{ statsDiff.scoreXpDiff > 0 ? '+' : '' }}{{ Math.round(statsDiff.scoreXpDiff) }} XP
+          </span>
+        </div>
 
         <div class="profile-hero__details">
           <div class="profile-hero__name-row">
@@ -170,42 +177,26 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
           <CategoryTabs :model-value="activeCategory" @update:model-value="activeCategory = $event" />
 
           <div class="profile-hero__stats">
-            <StatBlock
-              label="Total AP"
-              :value="activeStats?.ap ?? 0"
-              :trend="statsDiff?.apDiff"
-            />
+            <StatBlock label="Total AP" :value="activeStats?.ap ?? 0" :trend="statsDiff?.apDiff" />
             <div class="profile-hero__rank-block profile-hero__rank-block--clickable" role="button" tabindex="0"
               aria-label="View on global leaderboard" @click="navigateToGlobalRank"
               @keydown.enter="navigateToGlobalRank">
-              <StatBlock
-                label="Global Rank"
-                :value="activeStats?.ranking ?? 0"
-                :decimals="0"
-                :trend="statsDiff?.rankingDiff ? -statsDiff.rankingDiff : undefined"
-              />
+              <StatBlock label="Global Rank" :value="activeStats?.ranking ?? 0" :decimals="0"
+                :trend="statsDiff?.rankingDiff ? -statsDiff.rankingDiff : undefined" />
               <span v-if="activeStats?.ranking && activeStats.ranking <= 3" class="profile-hero__rank-badge"
                 :class="getRankClass(activeStats.ranking)">#{{ activeStats.ranking }}</span>
             </div>
             <div class="profile-hero__rank-block profile-hero__rank-block--clickable" role="button" tabindex="0"
               aria-label="View on country leaderboard" @click="navigateToCountryRank"
               @keydown.enter="navigateToCountryRank">
-              <StatBlock
-                label="Country Rank"
-                :value="activeStats?.countryRanking ?? 0"
-                :decimals="0"
-                :trend="statsDiff?.countryRankingDiff ? -statsDiff.countryRankingDiff : undefined"
-              />
+              <StatBlock label="Country Rank" :value="activeStats?.countryRanking ?? 0" :decimals="0"
+                :trend="statsDiff?.countryRankingDiff ? -statsDiff.countryRankingDiff : undefined" />
               <span v-if="activeStats?.countryRanking && activeStats.countryRanking <= 3"
                 class="profile-hero__rank-badge" :class="getRankClass(activeStats.countryRanking)">#{{
                   activeStats.countryRanking }}</span>
             </div>
-            <StatBlock
-              label="Ranked Plays"
-              :value="activeStats?.rankedPlays ?? 0"
-              :decimals="0"
-              :trend="statsDiff?.rankedPlaysDiff"
-            />
+            <StatBlock label="Ranked Plays" :value="activeStats?.rankedPlays ?? 0" :decimals="0"
+              :trend="statsDiff?.rankedPlaysDiff" />
           </div>
         </div>
       </div>
@@ -283,12 +274,31 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: var(--space-xl);
+  gap: var(--space-md);
   padding: var(--space-xl) var(--space-lg);
   text-align: center;
   background: color-mix(in srgb, var(--bg-base) 55%, transparent);
   backdrop-filter: blur(12px);
   border-radius: var(--radius-card);
+}
+
+.profile-hero__level-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.profile-hero__xp-trend {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+}
+
+.profile-hero__xp-trend--up {
+  color: var(--success);
+}
+
+.profile-hero__xp-trend--down {
+  color: var(--error);
 }
 
 .profile-hero__details {
