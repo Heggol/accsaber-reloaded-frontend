@@ -53,6 +53,14 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('steamId')
   }
 
+  function setProfile(user: { name: string; avatarUrl: string; country: string }) {
+    userProfile.value = {
+      name: user.name,
+      avatarUrl: user.avatarUrl,
+      country: user.country,
+    }
+  }
+
   function setStaffAuth(token: string, role: StaffRole) {
     staffToken.value = token
     staffRole.value = role
@@ -149,6 +157,7 @@ export const useAuthStore = defineStore('auth', () => {
     hasRole,
     setSteamId,
     clearSteamId,
+    setProfile,
     setStaffAuth,
     clearStaffAuth,
     login,

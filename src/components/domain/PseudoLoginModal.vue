@@ -26,20 +26,14 @@ async function handleLogin() {
   loading.value = true
 
   try {
-    const { resolveToSteamId } = await import('@/utils/idResolver')
-    const steamId = await resolveToSteamId(input.value)
-    authStore.setSteamId(steamId)
-    await authStore.fetchProfile()
-    if (!authStore.userProfile) {
-      authStore.clearSteamId()
-      error.value = 'Player not found on AccSaber'
-      loading.value = false
-      return
-    }
+    const { linkUser } = await import('@/api/users')
+    const user = await linkUser(input.value.trim())
+    authStore.setSteamId(user.id)
+    authStore.setProfile(user)
     input.value = ''
     emit('close')
-  } catch (e) {
-    error.value = e instanceof Error ? e.message : 'Could not find a player with that ID'
+  } catch {
+    error.value = 'Player not found on AccSaber'
   }
   loading.value = false
 }
