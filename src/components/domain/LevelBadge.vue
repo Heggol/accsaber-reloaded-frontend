@@ -10,16 +10,7 @@ const props = defineProps<{
 }>()
 
 const tierKey = computed(() => {
-  if (props.level >= 100) return 'ascendant'
-  if (props.level >= 90) return 'mythic'
-  if (props.level >= 80) return 'transcendent'
-  if (props.level >= 70) return 'legend'
-  if (props.level >= 60) return 'grandmaster'
-  if (props.level >= 50) return 'master'
-  if (props.level >= 40) return 'expert'
-  if (props.level >= 30) return 'skilled'
-  if (props.level >= 20) return 'adept'
-  if (props.level >= 10) return 'apprentice'
+  if (props.title) return props.title.toLowerCase().replace(/\s+/g, '-')
   return 'newcomer'
 })
 
@@ -33,10 +24,7 @@ const progressPercent = computed(() => {
 
 <template>
   <div class="level-badge">
-    <div
-      class="level-badge__frame"
-      :class="`level-badge__frame--${tierKey}`"
-    >
+    <div class="level-badge__frame" :class="`level-badge__frame--${tierKey}`">
       <div v-if="avatarUrl" class="level-badge__avatar-wrap">
         <img class="level-badge__avatar" :src="avatarUrl" alt="Avatar" loading="lazy" />
       </div>
@@ -54,7 +42,8 @@ const progressPercent = computed(() => {
             backgroundColor: tierColor,
           }" />
         </div>
-        <span class="level-badge__xp">{{ Math.round(currentXp).toLocaleString() }} / {{ Math.round(requiredXp).toLocaleString() }} XP</span>
+        <span class="level-badge__xp">{{ Math.round(currentXp).toLocaleString() }} / {{
+          Math.round(requiredXp).toLocaleString() }} XP</span>
       </div>
     </div>
   </div>
@@ -246,6 +235,7 @@ const progressPercent = computed(() => {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   .level-badge__frame--grandmaster,
   .level-badge__frame--legend,
   .level-badge__frame--transcendent,
