@@ -160,6 +160,19 @@ function isActive(to: string): boolean {
         <span class="sidebar__tooltip">Log Out</span>
       </button>
 
+      <button v-if="authStore.isStaffAuthenticated && authStore.isAdmin" class="sidebar__item sidebar__logout-btn"
+        aria-label="Staff log out" @click="authStore.logout()">
+        <span class="sidebar__icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+            <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+          </svg>
+        </span>
+        <span class="sidebar__label">Staff Logout</span>
+        <span class="sidebar__tooltip">Staff Logout</span>
+      </button>
+
       <button class="sidebar__item sidebar__theme-toggle"
         :aria-label="theme.theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'" @click="theme.toggle()">
         <span class="sidebar__icon">

@@ -82,12 +82,6 @@ http {
             include /etc/nginx/security-headers.conf;
         }
 
-        location /admin.html {
-            expires 5m;
-            add_header Cache-Control "no-cache";
-            include /etc/nginx/security-headers.conf;
-        }
-
         location / {
             try_files $uri $uri/ /index.html;
             expires 5m;
