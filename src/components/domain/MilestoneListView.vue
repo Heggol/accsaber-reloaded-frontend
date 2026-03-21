@@ -79,9 +79,12 @@ function toggleSet(setId: string) {
   }
 }
 
+const hasAutoExpanded = ref(false)
+
 watchEffect(() => {
-  if (!props.loading && groups.value.length > 0 && expandedSets.value.size === 0) {
+  if (!hasAutoExpanded.value && !props.loading && groups.value.length > 0) {
     expandedSets.value.add(groups.value[0].setId)
+    hasAutoExpanded.value = true
   }
 })
 </script>

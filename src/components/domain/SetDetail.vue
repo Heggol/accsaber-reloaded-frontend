@@ -56,71 +56,167 @@ const starPositions = computed<StarLayout[]>(() => {
     })
   }
 
-  const prereqMap = new Map<string, string[]>()
+  const parentsOf = new Map<string, string[]>()
+  const childrenOf = new Map<string, string[]>()
+
   for (const p of props.prerequisites) {
-    if (!prereqMap.has(p.milestoneId)) prereqMap.set(p.milestoneId, [])
-    prereqMap.get(p.milestoneId)!.push(p.prerequisiteMilestoneId)
+    if (!parentsOf.has(p.milestoneId)) parentsOf.set(p.milestoneId, [])
+    parentsOf.get(p.milestoneId)!.push(p.prerequisiteMilestoneId)
+
+    if (!childrenOf.has(p.prerequisiteMilestoneId)) childrenOf.set(p.prerequisiteMilestoneId, [])
+    childrenOf.get(p.prerequisiteMilestoneId)!.push(p.milestoneId)
   }
 
   const depths = new Map<string, number>()
-  function getDepth(id: string, visited: Set<string> = new Set()): number {
+  function getDepth(id: string, visited = new Set<string>()): number {
     if (visited.has(id)) return 0
     visited.add(id)
     if (depths.has(id)) return depths.get(id)!
-    const prereqs = prereqMap.get(id) ?? []
-    const d = prereqs.length === 0 ? 0 : 1 + Math.max(...prereqs.map((pid) => getDepth(pid, visited)))
+    const parents = parentsOf.get(id) ?? []
+    const d = parents.length === 0 ? 0 : 1 + Math.max(...parents.map((pid) => getDepth(pid, new Set(visited))))
     depths.set(id, d)
     return d
   }
   for (const m of sorted) getDepth(m.milestoneId)
 
   const maxDepth = Math.max(...depths.values(), 0)
-  const byDepth = new Map<number, MilestoneCompletionResponse[]>()
+
+  const roots = sorted.filter((m) => {
+    const parents = parentsOf.get(m.milestoneId)
+    return !parents || parents.length === 0
+  })
+
+  const primaryParent = new Map<string, string>()
   for (const m of sorted) {
-    const d = depths.get(m.milestoneId) ?? 0
-    if (!byDepth.has(d)) byDepth.set(d, [])
-    byDepth.get(d)!.push(m)
+    const parents = parentsOf.get(m.milestoneId) ?? []
+    if (parents.length === 0) continue
+    if (parents.length === 1) {
+      primaryParent.set(m.milestoneId, parents[0])
+    } else {
+      let best = parents[0]
+      let bestD = depths.get(parents[0]) ?? 0
+      for (const pid of parents) {
+        const pd = depths.get(pid) ?? 0
+        if (pd > bestD) { best = pid; bestD = pd }
+      }
+      primaryParent.set(m.milestoneId, best)
+    }
   }
 
-  const padding = 12
+  const primaryChildrenOf = new Map<string, string[]>()
+  for (const [childId, parentId] of primaryParent) {
+    if (!primaryChildrenOf.has(parentId)) primaryChildrenOf.set(parentId, [])
+    primaryChildrenOf.get(parentId)!.push(childId)
+  }
+
+  const weights = new Map<string, number>()
+  function getWeight(id: string): number {
+    if (weights.has(id)) return weights.get(id)!
+    const children = primaryChildrenOf.get(id) ?? []
+    const w = children.length === 0 ? 1 : children.reduce((s, cid) => s + getWeight(cid), 0)
+    weights.set(id, w)
+    return w
+  }
+  for (const r of roots) getWeight(r.milestoneId)
+  for (const m of sorted) if (!weights.has(m.milestoneId)) getWeight(m.milestoneId)
+
+  for (const [, children] of primaryChildrenOf) {
+    children.sort((a, b) => (weights.get(b) ?? 1) - (weights.get(a) ?? 1))
+  }
+
+  const treeRoots = roots.filter((r) => (weights.get(r.milestoneId) ?? 1) > 1)
+  const loneNodes = roots.filter((r) => (weights.get(r.milestoneId) ?? 1) <= 1)
+  treeRoots.sort((a, b) => (weights.get(b.milestoneId) ?? 1) - (weights.get(a.milestoneId) ?? 1))
+
+  const padding = 10
   const xRange = 100 - padding * 2
   const yRange = 100 - padding * 2
-
   const positions = new Map<string, { x: number; y: number }>()
 
-  for (const m of sorted) {
-    const d = depths.get(m.milestoneId) ?? 0
-    const row = byDepth.get(d)!
-    const indexInRow = row.indexOf(m)
-    const prereqCount = prereqMap.get(m.milestoneId)?.length ?? 0
-    const h = hashString(m.milestoneId)
+  function layoutNode(id: string, yMin: number, yMax: number) {
+    const d = depths.get(id) ?? 0
+    const h = hashString(id)
 
-    const depthSpacing = prereqCount > 1 ? 1.3 : 1
-    const baseX = maxDepth === 0
-      ? 50
-      : padding + (d / maxDepth) * xRange * depthSpacing
+    const baseX = maxDepth === 0 ? 50 : padding + (d / maxDepth) * xRange
+    const xJitter = (seededRandom(h) - 0.5) * 5
+    const x = Math.min(100 - padding, Math.max(padding, baseX + xJitter))
 
-    const x = Math.min(100 - padding, Math.max(padding, baseX + seededRandom(h) * 6 - 3))
+    const yCenter = (yMin + yMax) / 2
+    const yJitter = (seededRandom(h + 7) - 0.5) * 2
+    const y = Math.min(100 - padding, Math.max(padding, yCenter + yJitter))
 
-    const rowSpacing = yRange / (row.length + 1)
-    const baseY = padding + rowSpacing * (indexInRow + 1)
+    positions.set(id, { x, y })
 
-    let y = baseY + seededRandom(h + 1) * 8 - 4
+    const children = primaryChildrenOf.get(id) ?? []
+    if (children.length === 0) return
 
-    if (prereqCount >= 2) {
-      const prereqIds = prereqMap.get(m.milestoneId)!
-      const parentPositions = prereqIds.map((pid) => positions.get(pid)).filter(Boolean) as { x: number; y: number }[]
-      if (parentPositions.length >= 2) {
-        const avgY = parentPositions.reduce((s, p) => s + p.y, 0) / parentPositions.length
-        const spread = Math.abs(parentPositions[0].y - parentPositions[1].y)
-        if (spread < 15) {
-          y = avgY + (seededRandom(h + 2) > 0.5 ? 1 : -1) * (15 + seededRandom(h + 3) * 8)
-        }
+    const totalWeight = children.reduce((s, cid) => s + (weights.get(cid) ?? 1), 0)
+    let cursor = yMin
+    for (const cid of children) {
+      const w = weights.get(cid) ?? 1
+      const slice = ((yMax - yMin) * w) / totalWeight
+      layoutNode(cid, cursor, cursor + slice)
+      cursor += slice
+    }
+  }
+
+  if (treeRoots.length > 0) {
+    const totalTreeWeight = treeRoots.reduce((s, r) => s + (weights.get(r.milestoneId) ?? 1), 0)
+    let cursor = padding
+    for (const root of treeRoots) {
+      const w = weights.get(root.milestoneId) ?? 1
+      const slice = (yRange * w) / totalTreeWeight
+      layoutNode(root.milestoneId, cursor, cursor + slice)
+      cursor += slice
+    }
+  }
+
+  if (loneNodes.length > 0) {
+    const edgeSlots: { x: number; y: number }[] = []
+    const count = loneNodes.length
+
+    for (let i = 0; i < count; i++) {
+      const h = hashString(loneNodes[i].milestoneId)
+      const r = seededRandom(h + 10)
+      const side = i % 4
+      let x: number
+      let y: number
+
+      if (side === 0) {
+        x = padding * 0.3 + seededRandom(h + 11) * padding * 0.6
+        y = padding + seededRandom(h + 12) * yRange
+      } else if (side === 1) {
+        x = 100 - padding * 0.3 - seededRandom(h + 13) * padding * 0.6
+        y = padding + seededRandom(h + 14) * yRange
+      } else if (side === 2) {
+        x = padding + seededRandom(h + 15) * xRange
+        y = padding * 0.3 + seededRandom(h + 16) * padding * 0.6
+      } else {
+        x = padding + seededRandom(h + 17) * xRange
+        y = 100 - padding * 0.3 - seededRandom(h + 18) * padding * 0.6
       }
+
+      x += (r - 0.5) * 3
+      y += (seededRandom(h + 20) - 0.5) * 3
+      x = Math.min(98, Math.max(2, x))
+      y = Math.min(98, Math.max(2, y))
+
+      edgeSlots.push({ x, y })
     }
 
-    y = Math.min(100 - padding, Math.max(padding, y))
-    positions.set(m.milestoneId, { x, y })
+    for (let i = 0; i < loneNodes.length; i++) {
+      positions.set(loneNodes[i].milestoneId, edgeSlots[i])
+    }
+  }
+
+  for (const m of sorted) {
+    if (!positions.has(m.milestoneId)) {
+      const h = hashString(m.milestoneId)
+      positions.set(m.milestoneId, {
+        x: padding + seededRandom(h) * xRange,
+        y: padding + seededRandom(h + 1) * yRange,
+      })
+    }
   }
 
   return sorted.map((m) => ({
