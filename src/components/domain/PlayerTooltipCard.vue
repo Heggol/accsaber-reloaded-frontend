@@ -25,16 +25,12 @@ const borderColor = computed(() =>
 )
 
 onMounted(async () => {
-  try {
-    const [statsRes, levelRes] = await Promise.allSettled([
-      getUserOverallStatistics(props.userId),
-      getUserLevel(props.userId),
-    ])
-    if (statsRes.status === 'fulfilled') stats.value = statsRes.value
-    if (levelRes.status === 'fulfilled') level.value = levelRes.value
-  } catch {
-    stats.value = null
-  }
+  const [statsRes, levelRes] = await Promise.allSettled([
+    getUserOverallStatistics(props.userId),
+    getUserLevel(props.userId),
+  ])
+  if (statsRes.status === 'fulfilled') stats.value = statsRes.value
+  if (levelRes.status === 'fulfilled') level.value = levelRes.value
   loading.value = false
 })
 </script>

@@ -71,13 +71,15 @@ function sortIcon(col: TableColumn): string {
           </template>
           <template v-else>
             <tr v-for="(row, index) in rows" :key="index" class="data-table__row"
-              :class="[{ 'data-table__row--clickable': rowClickable }, rowClass?.(row, index)]"
-              @click="rowClickable && emit('rowClick', row, index)">
+              :class="[{ 'data-table__row--clickable': rowClickable || !!rowTo }, rowClass?.(row, index)]"
+              @click="rowClickable && !rowTo && emit('rowClick', row, index)">
               <td v-for="(col, colIdx) in columns" :key="col.key" class="data-table__td" :class="{
                 'data-table__td--mono': col.mono,
                 [`data-table__td--${col.align ?? 'left'}`]: true,
               }">
-                <router-link v-if="colIdx === 0 && rowTo" :to="rowTo(row)" class="data-table__row-link" tabindex="-1" aria-hidden="true" />
+                <router-link v-if="colIdx === 0 && rowTo" :to="rowTo(row)" class="data-table__row-link">
+                  <span class="sr-only">View details</span>
+                </router-link>
                 <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]" :index="index">
                   {{ row[col.key] }}
                 </slot>
@@ -248,6 +250,17 @@ function sortIcon(col: TableColumn): string {
   display: none;
   flex-direction: column;
   gap: var(--space-sm);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
 }
 
 @media (max-width: 767px) {
