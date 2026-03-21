@@ -13,7 +13,7 @@ const props = defineProps<{
 const tierColor = computed(() => getTierColor(props.milestone.tier))
 const isCompleted = computed(() => props.milestone.userCompleted === true)
 const isNotCompleted = computed(() => !!props.loggedIn && !isCompleted.value)
-const isMilestoneType = computed(() => props.milestone.type.toUpperCase() === 'MILESTONE')
+const isMilestoneType = computed(() => props.milestone.type?.toUpperCase() === 'MILESTONE')
 const hasScoreInfo = computed(() => isCompleted.value && !!props.milestone.achievedWithScoreId && !!accuracy.value)
 const typeLabel = computed(() => isMilestoneType.value ? 'milestone' : 'achievement')
 const blTooltip = computed(() => `This ${typeLabel.value} is exclusive to players with the BeatLeader mod.`)
@@ -22,7 +22,7 @@ const expanded = ref(false)
 
 const completionText = computed(() => {
   const { completions, totalPlayers, completionPercentage } = props.milestone
-  return `${completions}/${totalPlayers} players (${completionPercentage.toFixed(1)}%)`
+  return `${completions ?? 0}/${totalPlayers ?? 0} players (${(completionPercentage ?? 0).toFixed(1)}%)`
 })
 
 const accuracy = computed(() => {
@@ -53,7 +53,13 @@ function toggleExpand() {
     'milestone-detail--expanded': expanded,
     'milestone-detail--dim': isNotCompleted,
   }" :style="{ '--tier-color': tierColor }">
-    <div class="milestone-detail__header" @click="toggleExpand">
+    <div class="milestone-detail__header"
+      :tabindex="compact && hasScoreInfo ? 0 : undefined"
+      :role="compact && hasScoreInfo ? 'button' : undefined"
+      :aria-expanded="compact && hasScoreInfo ? expanded : undefined"
+      @click="toggleExpand"
+      @keydown.enter="toggleExpand"
+      @keydown.space.prevent="toggleExpand">
       <span class="milestone-detail__icon" :class="{
         'milestone-detail__icon--completed': isCompleted,
         'milestone-detail__icon--gray': isNotCompleted,
@@ -107,7 +113,7 @@ function toggleExpand() {
           <div class="milestone-detail__score-info">
             <span class="milestone-detail__score-text">
               <strong>{{ accuracy }}%</strong> on
-              <em>{{ milestone.songName }} - {{ milestone.songAuthor }}</em>
+              <em>{{ milestone.songName ?? 'Unknown Song' }}{{ milestone.songAuthor ? ` - ${milestone.songAuthor}` : '' }}</em>
               <template v-if="milestone.difficulty"> ({{ formatDifficulty(milestone.difficulty) }})</template>
             </span>
             <span v-if="milestone.mapAuthor" class="milestone-detail__mapper">Mapped by {{ milestone.mapAuthor }}</span>
@@ -131,7 +137,7 @@ function toggleExpand() {
         <div class="milestone-detail__score-info">
           <span class="milestone-detail__score-text">
             Completed with <strong>{{ accuracy }}%</strong> on
-            <em>{{ milestone.songName }} - {{ milestone.songAuthor }}</em>
+            <em>{{ milestone.songName ?? 'Unknown Song' }}{{ milestone.songAuthor ? ` - ${milestone.songAuthor}` : '' }}</em>
             <template v-if="milestone.difficulty"> ({{ formatDifficulty(milestone.difficulty) }})</template>
           </span>
           <span v-if="milestone.mapAuthor" class="milestone-detail__mapper">Mapped by {{ milestone.mapAuthor }}</span>

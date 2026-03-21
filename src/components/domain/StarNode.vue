@@ -20,7 +20,7 @@ const tierColor = computed(() => getTierColor(props.milestone.tier))
 const tierScale = computed(() => TIER_SCALES[tierKey.value] ?? 1)
 const isCompleted = computed(() => props.milestone.userCompleted === true)
 const isNotCompleted = computed(() => !!props.loggedIn && !isCompleted.value)
-const isMilestoneType = computed(() => props.milestone.type.toUpperCase() === 'MILESTONE')
+const isMilestoneType = computed(() => props.milestone.type?.toUpperCase() === 'MILESTONE')
 
 const ariaLabel = computed(() => {
   const status = isCompleted.value ? 'Completed' : 'Not completed'

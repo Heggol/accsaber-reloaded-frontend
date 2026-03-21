@@ -7,7 +7,7 @@ import MilestoneListView from '@/components/domain/MilestoneListView.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
 import type { MilestoneCompletionResponse, MilestoneSetResponse, PrerequisiteLinkResponse } from '@/types/api/milestones'
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 const authStore = useAuthStore()
@@ -22,7 +22,7 @@ const isMobile = ref(false)
 const viewMode = ref<'chart' | 'list'>('chart')
 
 const selectedSetId = computed({
-  get: () => (route.query.set as string) ?? null,
+  get: (): string | null => (route.query.set as string) || null,
   set: (val: string | null) => {
     router.replace({ query: val ? { set: val } : {} })
   },
@@ -94,10 +94,16 @@ watch(selectedSetId, (id) => {
   if (id) fetchPrerequisites(id)
 }, { immediate: true })
 
+function handleResize() { isMobile.value = window.innerWidth < 768 }
+
 onMounted(() => {
-  isMobile.value = window.innerWidth < 768
-  window.addEventListener('resize', () => { isMobile.value = window.innerWidth < 768 })
+  handleResize()
+  window.addEventListener('resize', handleResize)
   fetchData()
+})
+
+onUnmounted(() => {
+  window.removeEventListener('resize', handleResize)
 })
 
 watch(() => authStore.userId, fetchData)
@@ -157,7 +163,7 @@ watch(() => authStore.userId, fetchData)
     <Transition v-else name="zoom" mode="out-in">
       <SetDetail v-if="selectedSet" :key="selectedSet.id" :set="selectedSet"
         :milestones="selectedMilestones" :prerequisites="selectedPrerequisites"
-        :logged-in="authStore.isLoggedIn" @back="selectedSetId ?? null" />
+        :logged-in="authStore.isLoggedIn" @back="selectedSetId = null" />
 
       <SetChartMap v-else-if="!isMobile" key="set-chart-map" :sets="sets" :milestones-by-set="milestonesBySet"
         :selected-set-id="selectedSetId" :locked-sets="lockedPlaceholders"

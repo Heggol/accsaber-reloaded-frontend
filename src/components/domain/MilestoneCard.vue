@@ -30,7 +30,7 @@ const completionText = computed(() => `${props.milestone.completionPercent.toFix
         'milestone-card__icon--completed': milestone.isCompleted,
         'milestone-card__icon--gray': loggedIn && !milestone.isCompleted,
       }">
-        <svg v-if="milestone.type.toUpperCase() === 'MILESTONE'" viewBox="0 0 20 20" fill="none" stroke="currentColor"
+        <svg v-if="milestone.type?.toUpperCase() === 'MILESTONE'" viewBox="0 0 20 20" fill="none" stroke="currentColor"
           stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
           <line x1="4" y1="3" x2="4" y2="17" />
           <path d="M4 3h10l-3 4 3 4H4" />

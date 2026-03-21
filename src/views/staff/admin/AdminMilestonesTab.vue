@@ -192,6 +192,7 @@ async function saveEdit() {
     const idx = milestones.value.findIndex((x) => x.id === updated.id)
     if (idx !== -1) milestones.value[idx] = updated
     showEditModal.value = false
+  } catch {
   } finally {
     editLoading.value = false
   }

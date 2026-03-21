@@ -35,6 +35,7 @@ export function computeGridPosition(
   height: number,
   jitterSeed: number,
 ): Position {
+  if (totalCount <= 0) return { x: width / 2, y: height / 2 }
   const cols = Math.ceil(Math.sqrt(totalCount))
   const rows = Math.ceil(totalCount / cols)
   const cellW = width / cols

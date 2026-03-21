@@ -4,7 +4,7 @@ import SkeletonLoader from '@/components/common/SkeletonLoader.vue'
 import MilestoneDetail from '@/components/domain/MilestoneDetail.vue'
 import type { MilestoneCompletionResponse, MilestoneSetResponse } from '@/types/api/milestones'
 import type { Tab } from '@/types/display'
-import { computed, ref } from 'vue'
+import { computed, ref, watchEffect } from 'vue'
 
 const props = defineProps<{
   milestones: MilestoneCompletionResponse[]
@@ -79,9 +79,11 @@ function toggleSet(setId: string) {
   }
 }
 
-if (!props.loading && groups.value.length > 0) {
-  expandedSets.value.add(groups.value[0].setId)
-}
+watchEffect(() => {
+  if (!props.loading && groups.value.length > 0 && expandedSets.value.size === 0) {
+    expandedSets.value.add(groups.value[0].setId)
+  }
+})
 </script>
 
 <template>
@@ -107,7 +109,7 @@ if (!props.loading && groups.value.length > 0) {
 
     <template v-else>
       <div v-for="group in groups" :key="group.setId" class="milestone-set">
-        <button class="milestone-set__header" @click="toggleSet(group.setId)">
+        <button class="milestone-set__header" :aria-expanded="expandedSets.has(group.setId)" @click="toggleSet(group.setId)">
           <div class="milestone-set__info">
             <h3 class="milestone-set__title">{{ group.setTitle }}</h3>
             <span v-if="loggedIn" class="milestone-set__count">

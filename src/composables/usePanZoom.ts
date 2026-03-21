@@ -34,8 +34,8 @@ export function usePanZoom(containerRef: Ref<HTMLElement | null>, options?: {
     const factor = e.deltaY > 0 ? 0.9 : 1.1
     const next = Math.min(maxZoom, Math.max(minZoom, prev * factor))
 
-    translateX.value += (cursorX / prev) * (1 - next / prev)
-    translateY.value += (cursorY / prev) * (1 - next / prev)
+    translateX.value += cursorX * (1 / next - 1 / prev)
+    translateY.value += cursorY * (1 / next - 1 / prev)
     scale.value = next
   }
 
