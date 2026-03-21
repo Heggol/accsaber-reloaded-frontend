@@ -18,6 +18,11 @@ const accentColor = computed(() =>
 )
 
 const completionText = computed(() => `${props.milestone.completionPercent.toFixed(1)}% of players`)
+
+const progressPercent = computed(() => {
+  if (props.milestone.userProgress == null || !props.milestone.targetValue) return null
+  return Math.min(100, (props.milestone.userProgress / props.milestone.targetValue) * 100)
+})
 </script>
 
 <template>
@@ -56,6 +61,10 @@ const completionText = computed(() => `${props.milestone.completionPercent.toFix
     <div class="milestone-card__footer">
       <span class="milestone-card__xp">{{ milestone.xp }} XP</span>
       <span class="milestone-card__completion">{{ completionText }}</span>
+    </div>
+    <div v-if="progressPercent != null" class="milestone-card__progress">
+      <div class="milestone-card__progress-bar" :style="{ width: `${progressPercent}%` }" />
+      <span class="milestone-card__progress-text">{{ progressPercent.toFixed(1) }}%</span>
     </div>
   </div>
 </template>
@@ -162,6 +171,34 @@ const completionText = computed(() => `${props.milestone.completionPercent.toFix
 
 .milestone-card__completion {
   font-size: var(--text-caption);
+  color: var(--text-tertiary);
+}
+
+.milestone-card__progress {
+  position: relative;
+  height: 4px;
+  background: var(--bg-overlay);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.milestone-card__progress-bar {
+  height: 100%;
+  background: var(--tier-color);
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+
+.milestone-card--completed .milestone-card__progress-bar {
+  background: var(--ms-accent, var(--accent));
+}
+
+.milestone-card__progress-text {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
   color: var(--text-tertiary);
 }
 </style>

@@ -46,6 +46,7 @@ export interface MilestoneCompletionResponse {
   completions: number
   totalPlayers: number
   completionPercentage: number
+  userProgress?: number
   userCompleted?: boolean
   userCompletedAt?: string
   achievedWithScoreId?: string

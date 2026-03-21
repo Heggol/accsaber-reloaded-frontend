@@ -130,6 +130,8 @@ export function toMilestoneDisplay(
     type: m.type,
     tier: m.tier,
     xp: m.xp,
+    targetValue: m.targetValue,
+    userProgress: m.progress,
     completionPercent: m.completionPercentage,
     isCompleted: m.completed,
     categoryCode,

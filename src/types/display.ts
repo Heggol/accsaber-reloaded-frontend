@@ -130,6 +130,8 @@ export interface MilestoneDisplay {
   type: MilestoneType
   tier: MilestoneTier
   xp: number
+  targetValue: number
+  userProgress?: number
   completionPercent: number
   isCompleted?: boolean
   categoryCode?: CategoryCode

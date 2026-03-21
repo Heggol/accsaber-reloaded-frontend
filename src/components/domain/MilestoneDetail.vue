@@ -30,6 +30,11 @@ const accuracy = computed(() => {
   return ((props.milestone.score / props.milestone.maxScore) * 100).toFixed(2)
 })
 
+const progressPercent = computed(() => {
+  if (props.milestone.userProgress == null || !props.milestone.targetValue) return null
+  return Math.min(100, (props.milestone.userProgress / props.milestone.targetValue) * 100)
+})
+
 const completedAtFormatted = computed(() => {
   if (!props.milestone.userCompletedAt) return null
   return new Date(props.milestone.userCompletedAt).toLocaleDateString(undefined, {
@@ -53,13 +58,10 @@ function toggleExpand() {
     'milestone-detail--expanded': expanded,
     'milestone-detail--dim': isNotCompleted,
   }" :style="{ '--tier-color': tierColor }">
-    <div class="milestone-detail__header"
-      :tabindex="compact && hasScoreInfo ? 0 : undefined"
+    <div class="milestone-detail__header" :tabindex="compact && hasScoreInfo ? 0 : undefined"
       :role="compact && hasScoreInfo ? 'button' : undefined"
-      :aria-expanded="compact && hasScoreInfo ? expanded : undefined"
-      @click="toggleExpand"
-      @keydown.enter="toggleExpand"
-      @keydown.space.prevent="toggleExpand">
+      :aria-expanded="compact && hasScoreInfo ? expanded : undefined" @click="toggleExpand"
+      @keydown.enter="toggleExpand" @keydown.space.prevent="toggleExpand">
       <span class="milestone-detail__icon" :class="{
         'milestone-detail__icon--completed': isCompleted,
         'milestone-detail__icon--gray': isNotCompleted,
@@ -92,6 +94,8 @@ function toggleExpand() {
       </div>
       <div v-if="compact" class="milestone-detail__compact-meta">
         <span class="milestone-detail__xp">{{ milestone.xp }} XP</span>
+        <span v-if="progressPercent != null && !isCompleted" class="milestone-detail__progress-label">{{
+          progressPercent.toFixed(1) }}%</span>
         <span class="milestone-detail__completion">{{ completionText }}</span>
         <svg v-if="isCompleted" class="milestone-detail__check-icon" viewBox="0 0 20 20" fill="none"
           stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -104,6 +108,11 @@ function toggleExpand() {
       </div>
     </div>
 
+    <div v-if="compact && progressPercent != null && !isCompleted"
+      class="milestone-detail__progress milestone-detail__progress--compact">
+      <div class="milestone-detail__progress-bar" :style="{ width: `${progressPercent}%` }" />
+    </div>
+
     <div v-if="compact && hasScoreInfo" class="milestone-detail__dropdown"
       :class="{ 'milestone-detail__dropdown--open': expanded }">
       <div class="milestone-detail__dropdown-inner">
@@ -113,7 +122,8 @@ function toggleExpand() {
           <div class="milestone-detail__score-info">
             <span class="milestone-detail__score-text">
               <strong>{{ accuracy }}%</strong> on
-              <em>{{ milestone.songName ?? 'Unknown Song' }}{{ milestone.songAuthor ? ` - ${milestone.songAuthor}` : '' }}</em>
+              <em>{{ milestone.songName ?? 'Unknown Song' }}{{ milestone.songAuthor ? ` - ${milestone.songAuthor}` : ''
+                }}</em>
               <template v-if="milestone.difficulty"> ({{ formatDifficulty(milestone.difficulty) }})</template>
             </span>
             <span v-if="milestone.mapAuthor" class="milestone-detail__mapper">Mapped by {{ milestone.mapAuthor }}</span>
@@ -131,13 +141,19 @@ function toggleExpand() {
         <span class="milestone-detail__completion">{{ completionText }}</span>
       </div>
 
+      <div v-if="progressPercent != null && !isCompleted" class="milestone-detail__progress">
+        <div class="milestone-detail__progress-bar" :style="{ width: `${progressPercent}%` }" />
+        <span class="milestone-detail__progress-text">{{ progressPercent.toFixed(1) }}%</span>
+      </div>
+
       <div v-if="hasScoreInfo" class="milestone-detail__score">
         <img v-if="milestone.coverUrl" :src="milestone.coverUrl" :alt="milestone.songName ?? 'Cover'"
           class="milestone-detail__cover" loading="lazy" />
         <div class="milestone-detail__score-info">
           <span class="milestone-detail__score-text">
             Completed with <strong>{{ accuracy }}%</strong> on
-            <em>{{ milestone.songName ?? 'Unknown Song' }}{{ milestone.songAuthor ? ` - ${milestone.songAuthor}` : '' }}</em>
+            <em>{{ milestone.songName ?? 'Unknown Song' }}{{ milestone.songAuthor ? ` - ${milestone.songAuthor}` : ''
+              }}</em>
             <template v-if="milestone.difficulty"> ({{ formatDifficulty(milestone.difficulty) }})</template>
           </span>
           <span v-if="milestone.mapAuthor" class="milestone-detail__mapper">Mapped by {{ milestone.mapAuthor }}</span>
@@ -416,10 +432,50 @@ function toggleExpand() {
   height: 40px;
 }
 
+.milestone-detail__progress-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  color: var(--tier-color);
+  font-weight: 500;
+}
+
+.milestone-detail__progress {
+  position: relative;
+  height: 4px;
+  background: var(--bg-overlay);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.milestone-detail__progress--compact {
+  margin-top: var(--space-xs);
+}
+
+.milestone-detail__progress-bar {
+  height: 100%;
+  background: var(--tier-color);
+  border-radius: 2px;
+  transition: width 300ms ease;
+}
+
+.milestone-detail__progress-bar--done {
+  background: var(--success);
+}
+
+.milestone-detail__progress-text {
+  position: absolute;
+  top: calc(100% + 2px);
+  right: 0;
+  font-family: var(--font-mono);
+  font-size: 0.625rem;
+  color: var(--text-tertiary);
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .milestone-detail__chevron,
-  .milestone-detail__dropdown {
+  .milestone-detail__dropdown,
+  .milestone-detail__progress-bar {
     transition: none;
   }
 }
