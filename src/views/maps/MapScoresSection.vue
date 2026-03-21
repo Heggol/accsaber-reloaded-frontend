@@ -99,7 +99,17 @@ const rows = computed(() => {
   }))
 })
 
-const countryOptions = COUNTRY_OPTIONS
+const countryOptions = computed(() => {
+  const userCountry = authStore.userProfile?.country
+  if (!userCountry) return COUNTRY_OPTIONS
+  const userOption = COUNTRY_OPTIONS.find((o) => o.value === userCountry)
+  if (!userOption) return COUNTRY_OPTIONS
+  return [
+    { value: '', label: 'All Countries' },
+    userOption,
+    ...COUNTRY_OPTIONS.filter((o) => o.value !== '' && o.value !== userCountry),
+  ]
+})
 
 function scoreRowClass(row: Record<string, unknown>): Record<string, boolean> | undefined {
   if (!authStore.userId) return undefined
@@ -187,33 +197,15 @@ watch(
 <template>
   <div class="map-scores">
     <div class="map-scores__controls">
-      <BaseSelect
-        :model-value="countryFilter"
-        :options="countryOptions"
-        placeholder="All Countries"
-        searchable
-        @update:model-value="countryFilter = $event"
-      />
+      <BaseSelect :model-value="countryFilter" :options="countryOptions" placeholder="All Countries" searchable
+        @update:model-value="countryFilter = $event" />
       <SearchBox v-model="searchQuery" placeholder="Search players..." />
     </div>
 
-    <ScoreTable
-      :columns="columns"
-      :rows="rows"
-      :sort-state="sortState"
-      :loading="loading"
-      :loading-rows="10"
-      :page="currentPage"
-      :total-pages="totalPages"
-      medal-ranks
-      row-clickable
-      :row-to="playerRowTo"
-      :row-class="scoreRowClass"
-      empty-message="No scores recorded yet."
-      @sort="setSort"
-      @row-click="handleRowClick"
-      @update:page="setPage"
-    >
+    <ScoreTable :columns="columns" :rows="rows" :sort-state="sortState" :loading="loading" :loading-rows="10"
+      :page="currentPage" :total-pages="totalPages" medal-ranks row-clickable :row-to="playerRowTo"
+      :row-class="scoreRowClass" empty-message="No scores recorded yet." @sort="setSort" @row-click="handleRowClick"
+      @update:page="setPage">
       <template #cell-rank="{ value, row }">
         <span v-if="countryFilter" class="map-scores__rank" :class="getRankClass(row.countryRank as number)">
           #{{ row.countryRank }}
@@ -227,12 +219,8 @@ watch(
       <template #cell-player="{ row }">
         <div class="map-scores__player">
           <GlowImage :src="(row.avatarUrl as string)" :alt="(row.userName as string)" />
-          <PlayerTooltipTrigger
-            :user-id="(row._userId as string)"
-            :user-name="(row.userName as string)"
-            :avatar-url="(row.avatarUrl as string)"
-            :country="(row.country as string)"
-          >
+          <PlayerTooltipTrigger :user-id="(row._userId as string)" :user-name="(row.userName as string)"
+            :avatar-url="(row.avatarUrl as string)" :country="(row.country as string)">
             <span class="map-scores__name">{{ row.userName }}</span>
             <CountryFlag :country="(row.country as string)" />
           </PlayerTooltipTrigger>
@@ -256,8 +244,10 @@ watch(
       </template>
 
       <template #mobile-card="{ row }">
-        <router-link :to="playerRowTo(row)" class="ms-card" :class="{ 'ms-card--self-highlight': !!authStore.userId && row._userId === authStore.userId }">
-          <span class="ms-card__rank map-scores__rank" :class="getRankClass(countryFilter ? (row.countryRank as number) : (row.rank as number))">
+        <router-link :to="playerRowTo(row)" class="ms-card"
+          :class="{ 'ms-card--self-highlight': !!authStore.userId && row._userId === authStore.userId }">
+          <span class="ms-card__rank map-scores__rank"
+            :class="getRankClass(countryFilter ? (row.countryRank as number) : (row.rank as number))">
             #{{ countryFilter ? row.countryRank : row.rank }}
           </span>
           <GlowImage :src="(row.avatarUrl as string)" :alt="(row.userName as string)" :size="28" />
@@ -281,13 +271,8 @@ watch(
       </template>
     </ScoreTable>
 
-    <ScoreDetailModal
-      :open="detailOpen"
-      :score="detailScore"
-      :user-id="detailUserId"
-      :accent-color="accentColor"
-      @close="detailOpen = false"
-    />
+    <ScoreDetailModal :open="detailOpen" :score="detailScore" :user-id="detailUserId" :accent-color="accentColor"
+      @close="detailOpen = false" />
   </div>
 </template>
 

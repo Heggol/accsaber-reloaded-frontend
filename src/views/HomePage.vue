@@ -89,6 +89,14 @@ onUnmounted(() => {
           <span class="hero__stat-label">Ranked Maps</span>
         </div>
       </div>
+
+      <div class="hero__scroll-hint" aria-hidden="true">
+        <svg class="hero__scroll-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+          stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="7 13 12 18 17 13" />
+          <polyline points="7 6 12 11 17 6" />
+        </svg>
+      </div>
     </section>
 
     <section class="section">
@@ -267,6 +275,44 @@ onUnmounted(() => {
   color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.03em;
+}
+
+.hero__scroll-hint {
+  position: absolute;
+  bottom: var(--space-3xl);
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: scroll-float 2s ease-in-out infinite;
+}
+
+.hero__scroll-arrow {
+  color: var(--text-secondary);
+  filter:
+    drop-shadow(0 0 4px var(--accent-overall)) drop-shadow(0 0 8px color-mix(in srgb, var(--accent-overall) 40%, transparent));
+}
+
+@keyframes scroll-float {
+
+  0%,
+  100% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0.7;
+  }
+
+  50% {
+    transform: translateX(-50%) translateY(8px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero__scroll-hint {
+    animation: none;
+  }
 }
 
 .section {

@@ -12,8 +12,8 @@ import { useCategoryStore } from '@/stores/categories'
 import type { LeaderboardResponse } from '@/types/api/users'
 import type { CategoryCode, PlayerDisplay, TableColumn } from '@/types/display'
 import type { Page } from '@/types/pagination'
-import { toPlayerDisplay } from '@/utils/mappers'
 import { COUNTRY_OPTIONS } from '@/utils/countries'
+import { toPlayerDisplay } from '@/utils/mappers'
 import { getRankClass } from '@/utils/ranking'
 import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
@@ -93,7 +93,17 @@ const columns: TableColumn[] = [
   { key: 'rankedPlays', label: 'Plays', sortable: true, align: 'right', mono: true, width: '100px' },
 ]
 
-const countryOptions = COUNTRY_OPTIONS
+const countryOptions = computed(() => {
+  const userCountry = authStore.userProfile?.country
+  if (!userCountry) return COUNTRY_OPTIONS
+  const userOption = COUNTRY_OPTIONS.find((o) => o.value === userCountry)
+  if (!userOption) return COUNTRY_OPTIONS
+  return [
+    { value: '', label: 'All Countries' },
+    userOption,
+    ...COUNTRY_OPTIONS.filter((o) => o.value !== '' && o.value !== userCountry),
+  ]
+})
 
 async function fetchData() {
   const categoryId = categoryStore.getCategoryId(activeCategory.value)
@@ -184,11 +194,11 @@ watch(() => categoryStore.loaded, (loaded) => {
 
     <div class="leaderboards__table">
       <DataTable :columns="columns" :rows="rows" :sort-state="sortState" :loading="loading" :loading-rows="10"
-        :row-class="rowClass" row-clickable :row-to="playerRowTo"
-        empty-message="No players found for this category" @sort="setSort"
-        @row-click="handleRowClick">
+        :row-class="rowClass" row-clickable :row-to="playerRowTo" empty-message="No players found for this category"
+        @sort="setSort" @row-click="handleRowClick">
         <template #cell-rank="{ value, row }">
-          <span v-if="countryFilter && row.countryRank" class="rank-cell" :class="getRankClass(row.countryRank as number)">
+          <span v-if="countryFilter && row.countryRank" class="rank-cell"
+            :class="getRankClass(row.countryRank as number)">
             #{{ row.countryRank }}
             <span class="rank-cell__global">(#{{ value }})</span>
           </span>
@@ -217,12 +227,14 @@ watch(() => categoryStore.loaded, (loaded) => {
         </template>
 
         <template #mobile-card="{ row }">
-          <router-link :to="{ name: 'player-profile', params: { userId: row.userId as string } }" class="lb-card" :class="[
-            { 'lb-card--highlighted': row.userId === highlightedUserId },
-            { 'lb-card--self-highlight': !!authStore.userId && row.userId === authStore.userId },
-            rowClass(row)
-          ]" :data-user-id="row.userId">
-            <span class="lb-card__rank rank-cell" :class="getRankClass(countryFilter && row.countryRank ? row.countryRank as number : row.rank as number)">
+          <router-link :to="{ name: 'player-profile', params: { userId: row.userId as string } }" class="lb-card"
+            :class="[
+              { 'lb-card--highlighted': row.userId === highlightedUserId },
+              { 'lb-card--self-highlight': !!authStore.userId && row.userId === authStore.userId },
+              rowClass(row)
+            ]" :data-user-id="row.userId">
+            <span class="lb-card__rank rank-cell"
+              :class="getRankClass(countryFilter && row.countryRank ? row.countryRank as number : row.rank as number)">
               #{{ countryFilter && row.countryRank ? row.countryRank : row.rank }}
             </span>
             <div class="lb-card__player">

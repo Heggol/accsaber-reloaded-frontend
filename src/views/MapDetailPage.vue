@@ -6,14 +6,14 @@ import StatBlock from '@/components/common/StatBlock.vue'
 import ComplexityBadge from '@/components/domain/ComplexityBadge.vue'
 import TimeSeriesChart from '@/components/domain/TimeSeriesChart.vue'
 import { useColorExtract } from '@/composables/useColorExtract'
-import { useThemeStore } from '@/stores/theme'
 import { useCategoryStore } from '@/stores/categories'
-import type { MapResponse, MapDifficultyResponse, MapDifficultyStatisticsResponse, MapComplexityHistoryResponse, TopScoreSnapshot } from '@/types/api/maps'
+import { useThemeStore } from '@/stores/theme'
+import type { MapComplexityHistoryResponse, MapDifficultyResponse, MapDifficultyStatisticsResponse, MapResponse, TopScoreSnapshot } from '@/types/api/maps'
 import type { MetricType, TimeRange, TimeSeriesPoint } from '@/types/display'
 import { brightenRgb } from '@/utils/color'
 import { DIFFICULTY_ORDER, MAP_STATS_METRICS, TIME_RANGE_PARAMS } from '@/utils/constants'
-import { formatDifficulty } from '@/utils/mappers'
 import { formatRelativeDate } from '@/utils/formatters'
+import { formatDifficulty } from '@/utils/mappers'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MapScoresSection from './maps/MapScoresSection.vue'
@@ -250,13 +250,8 @@ watch(selectedStatsRange, () => fetchHistoricStats())
     <template v-else>
       <nav class="map-detail__breadcrumbs" aria-label="Breadcrumb">
         <span class="map-detail__breadcrumbs-pill">
-          <router-link
-            v-for="(crumb, i) in breadcrumbs"
-            :key="i"
-            :to="crumb.to ?? ''"
-            class="map-detail__crumb"
-            :class="{ 'map-detail__crumb--link': !!crumb.to }"
-          >
+          <router-link v-for="(crumb, i) in breadcrumbs" :key="i" :to="crumb.to ?? ''" class="map-detail__crumb"
+            :class="{ 'map-detail__crumb--link': !!crumb.to }">
             {{ crumb.label }}
             <span v-if="i < breadcrumbs.length - 1" class="map-detail__crumb-sep">/</span>
           </router-link>
@@ -282,38 +277,36 @@ watch(selectedStatsRange, () => fetchHistoricStats())
           <p class="map-detail__mapper">Mapped by <strong>{{ map.mapAuthor }}</strong></p>
 
           <div class="map-detail__links">
-            <BaseButton
-              v-if="map.beatsaverCode"
-              size="sm"
-              :href="`https://beatsaver.com/maps/${map.beatsaverCode}`"
-              aria-label="View on BeatSaver"
-            >
-              <img src="https://beatsaver.com/static/favicon/favicon-32x32.png" alt="BeatSaver" width="16" height="16" style="border-radius: 3px;" />
+            <BaseButton v-if="map.beatsaverCode" size="sm" :href="`beatsaver://${map.beatsaverCode}`"
+              aria-label="One-Click Install" title="One-Click Install">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M8 13V4.5a1.5 1.5 0 0 1 3 0V12" />
+                <path d="M11 11.5V6.5a1.5 1.5 0 0 1 3 0V12" />
+                <path d="M14 10.5V8.5a1.5 1.5 0 0 1 3 0V13a6 6 0 0 1-6 6H9a6 6 0 0 1-6-6v-2a1.5 1.5 0 0 1 3 0V12" />
+              </svg>
             </BaseButton>
-            <BaseButton
-              v-if="activeDifficulty?.blLeaderboardId"
-              size="sm"
+            <BaseButton v-if="map.beatsaverCode" size="sm" :href="`https://beatsaver.com/maps/${map.beatsaverCode}`"
+              aria-label="View on BeatSaver">
+              <img src="https://beatsaver.com/static/favicon/favicon-32x32.png" alt="BeatSaver" width="16" height="16"
+                style="border-radius: 3px;" />
+            </BaseButton>
+            <BaseButton v-if="activeDifficulty?.blLeaderboardId" size="sm"
               :href="`https://www.beatleader.com/leaderboard/global/${activeDifficulty.blLeaderboardId}`"
-              aria-label="View on BeatLeader"
-            >
-              <img src="https://beatleader.com/assets/favicon-32x32.png" alt="BeatLeader" width="16" height="16" style="border-radius: 3px;" />
+              aria-label="View on BeatLeader">
+              <img src="https://beatleader.com/assets/favicon-32x32.png" alt="BeatLeader" width="16" height="16"
+                style="border-radius: 3px;" />
             </BaseButton>
-            <BaseButton
-              v-if="activeDifficulty?.ssLeaderboardId"
-              size="sm"
+            <BaseButton v-if="activeDifficulty?.ssLeaderboardId" size="sm"
               :href="`https://scoresaber.com/leaderboard/${activeDifficulty.ssLeaderboardId}`"
-              aria-label="View on ScoreSaber"
-            >
-              <img src="https://scoresaber.com/favicon-32x32.png" alt="ScoreSaber" width="16" height="16" style="border-radius: 3px;" />
+              aria-label="View on ScoreSaber">
+              <img src="https://scoresaber.com/favicon-32x32.png" alt="ScoreSaber" width="16" height="16"
+                style="border-radius: 3px;" />
             </BaseButton>
           </div>
 
-          <BaseTabs
-            v-if="difficultyTabs.length > 1"
-            :tabs="difficultyTabs"
-            :model-value="activeDifficultyId"
-            @update:model-value="activeDifficultyId = $event"
-          />
+          <BaseTabs v-if="difficultyTabs.length > 1" :tabs="difficultyTabs" :model-value="activeDifficultyId"
+            @update:model-value="activeDifficultyId = $event" />
 
           <div v-if="activeDifficulty" class="map-detail__stats-strip">
             <div class="map-detail__diff-meta">
@@ -334,34 +327,21 @@ watch(selectedStatsRange, () => fetchHistoricStats())
 
       <div class="map-detail__content">
         <template v-if="activeTab === 'leaderboard'">
-          <MapScoresSection
-            v-if="activeDifficultyId"
-            :difficulty-id="activeDifficultyId"
-            :map-id="map?.id"
-            :map-name="map?.songName"
-            :artist-name="map?.songAuthor"
-            :map-author="map?.mapAuthor"
-            :cover-url="map?.coverUrl"
-            :category-code="categoryCode"
+          <MapScoresSection v-if="activeDifficultyId" :difficulty-id="activeDifficultyId" :map-id="map?.id"
+            :map-name="map?.songName" :artist-name="map?.songAuthor" :map-author="map?.mapAuthor"
+            :cover-url="map?.coverUrl" :category-code="categoryCode"
             :difficulty="activeDifficulty ? formatDifficulty(activeDifficulty.difficulty) : undefined"
-            :accent-color="resolvedAccent"
-          />
+            :accent-color="resolvedAccent" />
         </template>
 
         <template v-if="activeTab === 'statistics'">
           <div v-if="topScoreHistory.length > 0" class="map-detail__section">
             <h2 class="map-detail__section-heading">#1 History</h2>
             <div class="map-detail__top-history">
-              <div
-                v-for="(entry, i) in topScoreHistory"
-                :key="entry.scoreId"
-                class="map-detail__top-history-row"
-                :class="{ 'map-detail__top-history-row--current': i === 0 }"
-                tabindex="0"
-                role="button"
+              <div v-for="(entry, i) in topScoreHistory" :key="entry.scoreId" class="map-detail__top-history-row"
+                :class="{ 'map-detail__top-history-row--current': i === 0 }" tabindex="0" role="button"
                 @click="router.push({ name: 'player-profile', params: { userId: entry.userId } })"
-                @keydown.enter="router.push({ name: 'player-profile', params: { userId: entry.userId } })"
-              >
+                @keydown.enter="router.push({ name: 'player-profile', params: { userId: entry.userId } })">
                 <img class="map-detail__top-avatar" :src="entry.avatarUrl" :alt="entry.userName" />
                 <span class="map-detail__top-name">{{ entry.userName }}</span>
                 <span class="map-detail__top-acc">{{ (entry.accuracy * 100).toFixed(2) }}%</span>
@@ -374,22 +354,17 @@ watch(selectedStatsRange, () => fetchHistoricStats())
           <div v-if="complexityChanges.length > 0" class="map-detail__section">
             <h2 class="map-detail__section-heading">Complexity History</h2>
             <div class="map-detail__complexity-list">
-              <div
-                v-for="(change, i) in complexityChanges"
-                :key="i"
-                class="map-detail__complexity-entry"
-              >
+              <div v-for="(change, i) in complexityChanges" :key="i" class="map-detail__complexity-entry">
                 <span class="map-detail__complexity-date">{{ formatDate(change.date) }}</span>
                 <template v-if="change.type === 'INITIAL'">
                   <span class="map-detail__complexity-val">{{ change.to.toFixed(1) }}</span>
                   <span class="map-detail__complexity-tag map-detail__complexity-tag--initial">INITIAL</span>
                 </template>
                 <template v-else>
-                  <span class="map-detail__complexity-val">{{ change.from.toFixed(1) }} → {{ change.to.toFixed(1) }}</span>
-                  <span
-                    class="map-detail__complexity-tag"
-                    :class="change.type === 'BUFF' ? 'map-detail__complexity-tag--buff' : 'map-detail__complexity-tag--nerf'"
-                  >
+                  <span class="map-detail__complexity-val">{{ change.from.toFixed(1) }} → {{ change.to.toFixed(1)
+                    }}</span>
+                  <span class="map-detail__complexity-tag"
+                    :class="change.type === 'BUFF' ? 'map-detail__complexity-tag--buff' : 'map-detail__complexity-tag--nerf'">
                     {{ change.type === 'BUFF' ? '↑ BUFF' : '↓ NERF' }}
                   </span>
                 </template>
@@ -399,16 +374,10 @@ watch(selectedStatsRange, () => fetchHistoricStats())
 
           <div v-if="activeDifficultyId" class="map-detail__section">
             <h2 class="map-detail__section-heading">Statistics Over Time</h2>
-            <TimeSeriesChart
-              :data="statsChartPoints"
-              :metric-label="selectedStatsMetric"
-              :accent-color="resolvedAccent"
-              :available-metrics="MAP_STATS_METRICS"
-              :selected-metric="selectedStatsMetric"
-              :selected-range="selectedStatsRange"
-              @update:selected-metric="selectedStatsMetric = $event as MetricType"
-              @update:selected-range="selectedStatsRange = $event"
-            />
+            <TimeSeriesChart :data="statsChartPoints" :metric-label="selectedStatsMetric" :accent-color="resolvedAccent"
+              :available-metrics="MAP_STATS_METRICS" :selected-metric="selectedStatsMetric"
+              :selected-range="selectedStatsRange" @update:selected-metric="selectedStatsMetric = $event as MetricType"
+              @update:selected-range="selectedStatsRange = $event" />
           </div>
         </template>
       </div>
@@ -426,7 +395,7 @@ watch(selectedStatsRange, () => fetchHistoricStats())
   --accent: var(--page-accent, var(--accent-overall));
 }
 
-.map-detail > *:not(.map-detail__bg) {
+.map-detail>*:not(.map-detail__bg) {
   width: 100%;
   max-width: 1030px;
   position: relative;

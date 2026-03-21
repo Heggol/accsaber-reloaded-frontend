@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed } from 'vue';
 
 const props = defineProps<{
   variant?: 'default' | 'primary' | 'destructive'
@@ -15,26 +15,26 @@ defineEmits<{
 
 const tag = computed(() => (props.href ? 'a' : 'button'))
 
+const isExternalUrl = computed(() =>
+  props.href?.startsWith('http://') || props.href?.startsWith('https://'),
+)
+
 const linkAttrs = computed(() =>
   props.href
-    ? { href: props.href, target: '_blank', rel: 'noopener noreferrer' }
+    ? {
+      href: props.href,
+      ...(isExternalUrl.value ? { target: '_blank', rel: 'noopener noreferrer' } : {}),
+    }
     : {},
 )
 </script>
 
 <template>
-  <component
-    :is="tag"
-    class="base-button"
-    :class="[
-      `base-button--${variant ?? 'default'}`,
-      `base-button--${size ?? 'md'}`,
-      { 'base-button--loading': loading },
-    ]"
-    :disabled="!href && (disabled || loading)"
-    v-bind="linkAttrs"
-    @click="$emit('click', $event)"
-  >
+  <component :is="tag" class="base-button" :class="[
+    `base-button--${variant ?? 'default'}`,
+    `base-button--${size ?? 'md'}`,
+    { 'base-button--loading': loading },
+  ]" :disabled="!href && (disabled || loading)" v-bind="linkAttrs" @click="$emit('click', $event)">
     <span class="base-button__content" :class="{ 'base-button__content--hidden': loading }">
       <slot />
     </span>

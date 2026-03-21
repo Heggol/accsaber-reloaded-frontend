@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import PlayerTooltipCard from '@/components/domain/PlayerTooltipCard.vue'
-import { onUnmounted, ref } from 'vue'
+import PlayerTooltipCard from '@/components/domain/PlayerTooltipCard.vue';
+import { onUnmounted, ref } from 'vue';
 
 defineProps<{
   userId: string
@@ -36,12 +36,7 @@ onUnmounted(() => {
     <slot />
     <Transition name="tooltip">
       <div v-if="showTooltip" class="tooltip-trigger__popup">
-        <PlayerTooltipCard
-          :user-id="userId"
-          :user-name="userName"
-          :avatar-url="avatarUrl"
-          :country="country"
-        />
+        <PlayerTooltipCard :user-id="userId" :user-name="userName" :avatar-url="avatarUrl" :country="country" />
       </div>
     </Transition>
   </span>
@@ -53,6 +48,11 @@ onUnmounted(() => {
   display: inline-flex;
   align-items: center;
   gap: var(--space-xs);
+  z-index: 2;
+}
+
+.tooltip-trigger:hover {
+  z-index: 10000;
 }
 
 .tooltip-trigger__popup {

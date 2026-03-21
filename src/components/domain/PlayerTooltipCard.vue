@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import CountryFlag from '@/components/domain/CountryFlag.vue'
-import { getUserOverallStatistics } from '@/api/users'
-import type { UserCategoryStatisticsResponse } from '@/types/api/users'
-import { onMounted, ref } from 'vue'
+import { getUserLevel, getUserOverallStatistics } from '@/api/users';
+import CountryFlag from '@/components/domain/CountryFlag.vue';
+import type { LevelResponse, UserCategoryStatisticsResponse } from '@/types/api/users';
+import { computed, onMounted, ref } from 'vue';
 
 const props = defineProps<{
   userId: string
@@ -12,11 +12,26 @@ const props = defineProps<{
 }>()
 
 const stats = ref<UserCategoryStatisticsResponse | null>(null)
+const level = ref<LevelResponse | null>(null)
 const loading = ref(true)
+
+const tierKey = computed(() => {
+  if (level.value?.title) return level.value.title.toLowerCase().replace(/\s+/g, '-')
+  return null
+})
+
+const borderColor = computed(() =>
+  tierKey.value ? `var(--tier-${tierKey.value})` : undefined,
+)
 
 onMounted(async () => {
   try {
-    stats.value = await getUserOverallStatistics(props.userId)
+    const [statsRes, levelRes] = await Promise.allSettled([
+      getUserOverallStatistics(props.userId),
+      getUserLevel(props.userId),
+    ])
+    if (statsRes.status === 'fulfilled') stats.value = statsRes.value
+    if (levelRes.status === 'fulfilled') level.value = levelRes.value
   } catch {
     stats.value = null
   }
@@ -25,7 +40,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <div class="player-tooltip">
+  <div class="player-tooltip" :style="borderColor ? { '--level-color': borderColor } : undefined">
     <div class="player-tooltip__bg">
       <div class="player-tooltip__bg-image" :style="{ backgroundImage: `url(${avatarUrl})` }" />
       <div class="player-tooltip__bg-fade" />
@@ -67,7 +82,7 @@ onMounted(async () => {
 .player-tooltip {
   width: 240px;
   border-radius: var(--radius-card);
-  border: 1px solid var(--bg-overlay);
+  border: 1px solid var(--level-color, var(--bg-overlay));
   background: var(--bg-surface);
 }
 
@@ -108,7 +123,7 @@ onMounted(async () => {
   height: 56px;
   border-radius: var(--radius-avatar);
   object-fit: cover;
-  border: 2px solid var(--bg-overlay);
+  border: 2px solid var(--level-color, var(--bg-overlay));
 }
 
 .player-tooltip__info {
@@ -154,9 +169,17 @@ onMounted(async () => {
 }
 
 @keyframes shimmer {
-  0% { opacity: 0.5; }
-  50% { opacity: 0.8; }
-  100% { opacity: 0.5; }
+  0% {
+    opacity: 0.5;
+  }
+
+  50% {
+    opacity: 0.8;
+  }
+
+  100% {
+    opacity: 0.5;
+  }
 }
 
 .player-tooltip__stat-label {

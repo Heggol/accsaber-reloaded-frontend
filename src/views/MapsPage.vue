@@ -2,8 +2,8 @@
 import BaseSelect from '@/components/common/BaseSelect.vue'
 import DataTable from '@/components/common/DataTable.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
-import GlowImage from '@/components/common/GlowImage.vue'
 import FilterPopover from '@/components/common/FilterPopover.vue'
+import GlowImage from '@/components/common/GlowImage.vue'
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import SearchBox from '@/components/common/SearchBox.vue'
 import SkeletonLoader from '@/components/common/SkeletonLoader.vue'
@@ -14,10 +14,10 @@ import { usePageableRoute } from '@/composables/usePageableRoute'
 import { useCategoryStore } from '@/stores/categories'
 import type { BatchResponse } from '@/types/api/batches'
 import type { MapDifficultyResponse } from '@/types/api/maps'
-import type { Page } from '@/types/pagination'
 import type { MapDisplay, TableColumn } from '@/types/display'
-import { toMapDisplay } from '@/utils/mappers'
+import type { Page } from '@/types/pagination'
 import { formatRelativeDate } from '@/utils/formatters'
+import { toMapDisplay } from '@/utils/mappers'
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import MapFilterSidebar from './maps/MapFilterSidebar.vue'
@@ -30,13 +30,20 @@ const CATEGORY_ORDER = ['true_acc', 'standard_acc', 'tech_acc', 'low_mid', 'over
 
 type ViewMode = 'grid' | 'list' | 'batch'
 
+const MAPS_VIEW_KEY = 'accsaber:maps-view'
+
 const viewMode = computed<ViewMode>({
   get() {
     const v = route.query.view as string
     if (v === 'list' || v === 'batch') return v
+    if (!route.query.view) {
+      const stored = localStorage.getItem(MAPS_VIEW_KEY) as ViewMode | null
+      if (stored === 'list' || stored === 'batch') return stored
+    }
     return 'grid'
   },
   set(val) {
+    localStorage.setItem(MAPS_VIEW_KEY, val)
     const query = { ...route.query }
     if (val === 'grid') {
       delete query.view
@@ -317,52 +324,42 @@ watch(
 
     <div class="maps-page__controls">
       <div class="maps-page__controls-left">
-        <BaseSelect
-          v-if="viewMode === 'grid'"
-          :options="sortOptions"
-          :model-value="sortState.key"
-          @update:model-value="setSort($event)"
-        />
-        <BaseSelect
-          v-if="isBatchView"
-          :options="batchSortOptions"
-          :model-value="batchSortKey"
-          @update:model-value="batchSortKey = $event"
-        />
+        <BaseSelect v-if="viewMode === 'grid'" :options="sortOptions" :model-value="sortState.key"
+          @update:model-value="setSort($event)" />
+        <BaseSelect v-if="isBatchView" :options="batchSortOptions" :model-value="batchSortKey"
+          @update:model-value="batchSortKey = $event" />
         <SearchBox v-model="searchQuery" placeholder="Search maps..." />
       </div>
       <div class="maps-page__controls-right">
         <div class="maps-page__view-toggle" role="radiogroup" aria-label="View mode">
-          <button
-            class="maps-page__view-btn"
-            :class="{ 'maps-page__view-btn--active': viewMode === 'grid' }"
-            aria-label="Grid view"
-            @click="viewMode = 'grid'"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="3" y="3" width="7" height="7" /><rect x="14" y="3" width="7" height="7" /><rect x="3" y="14" width="7" height="7" /><rect x="14" y="14" width="7" height="7" />
+          <button class="maps-page__view-btn" :class="{ 'maps-page__view-btn--active': viewMode === 'grid' }"
+            aria-label="Grid view" @click="viewMode = 'grid'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
             </svg>
             <span class="maps-page__view-label">Grid</span>
           </button>
-          <button
-            class="maps-page__view-btn"
-            :class="{ 'maps-page__view-btn--active': viewMode === 'list' }"
-            aria-label="List view"
-            @click="viewMode = 'list'"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="8" y1="6" x2="21" y2="6" /><line x1="8" y1="12" x2="21" y2="12" /><line x1="8" y1="18" x2="21" y2="18" />
-              <line x1="3" y1="6" x2="3.01" y2="6" /><line x1="3" y1="12" x2="3.01" y2="12" /><line x1="3" y1="18" x2="3.01" y2="18" />
+          <button class="maps-page__view-btn" :class="{ 'maps-page__view-btn--active': viewMode === 'list' }"
+            aria-label="List view" @click="viewMode = 'list'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
+              <line x1="8" y1="6" x2="21" y2="6" />
+              <line x1="8" y1="12" x2="21" y2="12" />
+              <line x1="8" y1="18" x2="21" y2="18" />
+              <line x1="3" y1="6" x2="3.01" y2="6" />
+              <line x1="3" y1="12" x2="3.01" y2="12" />
+              <line x1="3" y1="18" x2="3.01" y2="18" />
             </svg>
             <span class="maps-page__view-label">List</span>
           </button>
-          <button
-            class="maps-page__view-btn"
-            :class="{ 'maps-page__view-btn--active': viewMode === 'batch' }"
-            aria-label="Batch view"
-            @click="viewMode = 'batch'"
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <button class="maps-page__view-btn" :class="{ 'maps-page__view-btn--active': viewMode === 'batch' }"
+            aria-label="Batch view" @click="viewMode = 'batch'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+              stroke-linecap="round" stroke-linejoin="round">
               <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
             </svg>
             <span class="maps-page__view-label">Batches</span>
@@ -371,23 +368,18 @@ watch(
 
         <FilterPopover v-if="!isBatchView" :open="filtersOpen" @update:open="filtersOpen = $event">
           <template #trigger>
-            <button
-              class="maps-page__filter-btn"
-              :class="{ 'maps-page__filter-btn--active': filtersOpen || hasActiveFilters }"
-              aria-label="Toggle filters"
-            >
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <button class="maps-page__filter-btn"
+              :class="{ 'maps-page__filter-btn--active': filtersOpen || hasActiveFilters }" aria-label="Toggle filters">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
                 <polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3" />
               </svg>
               <span v-if="hasActiveFilters" class="maps-page__filter-dot" />
             </button>
           </template>
-          <MapFilterSidebar
-            :selected-categories="selectedCategories"
-            :complexity-range="complexityRange"
+          <MapFilterSidebar :selected-categories="selectedCategories" :complexity-range="complexityRange"
             @update:selected-categories="selectedCategories = $event"
-            @update:complexity-range="complexityRange = $event"
-          />
+            @update:complexity-range="complexityRange = $event" />
         </FilterPopover>
       </div>
     </div>
@@ -404,28 +396,15 @@ watch(
         </template>
         <template v-else>
           <div class="maps-page__grid">
-            <MapCard
-              v-for="m in mapDisplays"
-              :key="m.difficultyId"
-              :map="m"
-              @click="navigateToMap(m.id)"
-            />
+            <MapCard v-for="m in mapDisplays" :key="m.difficultyId" :map="m" @click="navigateToMap(m.id)" />
           </div>
         </template>
       </template>
 
       <template v-else-if="viewMode === 'list'">
-        <DataTable
-          :columns="listColumns"
-          :rows="listRows"
-          :sort-state="listSortState"
-          :loading="loading"
-          :loading-rows="10"
-          row-clickable
-          empty-message="No maps found matching your filters."
-          @sort="handleListSort"
-          @row-click="handleListRowClick"
-        >
+        <DataTable :columns="listColumns" :rows="listRows" :sort-state="listSortState" :loading="loading"
+          :loading-rows="10" row-clickable empty-message="No maps found matching your filters." @sort="handleListSort"
+          @row-click="handleListRowClick">
           <template #cell-cover="{ row }">
             <GlowImage v-if="row.cover" :src="(row.cover as string)" :alt="(row.songName as string)" :size="44" />
           </template>
@@ -447,7 +426,8 @@ watch(
 
           <template #mobile-card="{ row }">
             <div class="maps-page__list-card" @click="handleListRowClick(row)">
-              <GlowImage v-if="row.cover" :src="(row.cover as string)" :alt="(row.songName as string)" :size="48" class="maps-page__list-card-cover" />
+              <GlowImage v-if="row.cover" :src="(row.cover as string)" :alt="(row.songName as string)" :size="48"
+                class="maps-page__list-card-cover" />
               <div v-else class="maps-page__list-card-cover-placeholder" />
               <div class="maps-page__list-card-info">
                 <span class="maps-page__name">{{ row.songName }}</span>
@@ -478,26 +458,20 @@ watch(
                 <h2 class="maps-page__batch-name">{{ batch.name }}</h2>
                 <div class="maps-page__batch-meta">
                   <span class="maps-page__batch-count">{{ batch.difficulties.length }} difficulties</span>
-                  <span v-if="batch.releasedAt" class="maps-page__batch-date">{{ formatRelativeDate(batch.releasedAt) }}</span>
+                  <span v-if="batch.releasedAt" class="maps-page__batch-date">{{ formatRelativeDate(batch.releasedAt)
+                    }}</span>
                 </div>
                 <p v-if="batch.description" class="maps-page__batch-desc">{{ batch.description }}</p>
               </div>
-              <div
-                v-for="group in batchDifficultiesByCategory(batch)"
-                :key="group.categoryCode"
-                class="maps-page__batch-category"
-              >
+              <div v-for="group in batchDifficultiesByCategory(batch)" :key="group.categoryCode"
+                class="maps-page__batch-category">
                 <div class="maps-page__batch-cat-header">
                   <span class="maps-page__batch-cat-dot" :style="{ background: group.accent }" />
                   <span class="maps-page__batch-cat-name">{{ group.name }}</span>
                 </div>
                 <div class="maps-page__batch-cards">
-                  <MapCardCompact
-                    v-for="m in group.diffs"
-                    :key="m.difficultyId"
-                    :map="m"
-                    @click="navigateToMap(m.id)"
-                  />
+                  <MapCardCompact v-for="m in group.diffs" :key="m.difficultyId" :map="m"
+                    @click="navigateToMap(m.id)" />
                 </div>
               </div>
             </div>
@@ -505,18 +479,10 @@ watch(
         </template>
       </template>
 
-      <PaginationControls
-        v-if="!isBatchView && totalPages > 1"
-        :page="currentPage"
-        :total-pages="totalPages"
-        @update:page="setPage($event)"
-      />
-      <PaginationControls
-        v-if="isBatchView && batchTotalPages > 1"
-        :page="currentPage"
-        :total-pages="batchTotalPages"
-        @update:page="setPage($event)"
-      />
+      <PaginationControls v-if="!isBatchView && totalPages > 1" :page="currentPage" :total-pages="totalPages"
+        @update:page="setPage($event)" />
+      <PaginationControls v-if="isBatchView && batchTotalPages > 1" :page="currentPage" :total-pages="batchTotalPages"
+        @update:page="setPage($event)" />
     </div>
   </div>
 </template>
