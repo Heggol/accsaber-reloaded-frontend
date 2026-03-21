@@ -6,6 +6,7 @@ import type {
   CreateMilestoneSetRequest,
   CreatePrerequisiteRequest,
   LinkMilestoneMapRequest,
+  UpdateMilestoneRequest,
   UpdatePrerequisiteRequest,
 } from '@/types/api/admin'
 import type { MilestoneResponse, MilestoneSetResponse, PrerequisiteLinkResponse } from '@/types/api/milestones'
@@ -21,8 +22,12 @@ export function createMilestone(req: CreateMilestoneRequest): Promise<MilestoneR
   return post<MilestoneResponse>('/admin/milestones', req)
 }
 
-export function deactivateMilestone(id: string): Promise<MilestoneResponse> {
-  return patch<MilestoneResponse>(`/admin/milestones/${id}`)
+export function updateMilestone(id: string, req: UpdateMilestoneRequest): Promise<MilestoneResponse> {
+  return put<MilestoneResponse>(`/admin/milestones/${id}`, req)
+}
+
+export function deactivateMilestone(id: string): Promise<void> {
+  return patch<void>(`/admin/milestones/${id}/deactivate`)
 }
 
 export function createMilestoneSet(req: CreateMilestoneSetRequest): Promise<MilestoneSetResponse> {

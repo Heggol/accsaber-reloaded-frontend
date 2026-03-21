@@ -48,6 +48,12 @@ const activeStats = computed(() => {
 
 const accent = computed(() => categoryStore.getAccent(activeCategory.value))
 
+const totalXpDiff = computed(() => {
+  if (!statsDiff.value) return 0
+  return (statsDiff.value.scoreXpDiff ?? 0) + (statsDiff.value.milestoneXpDiff ?? 0) + (statsDiff.value.milestoneSetBonusXpDiff ?? 0)
+})
+
+
 async function fetchStatsDiff() {
   try {
     const { getUserStatsDiff } = await import('@/api/users')
@@ -161,10 +167,37 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
         <div class="profile-hero__level-col">
           <LevelBadge :level="level?.level ?? 0" :current-xp="level?.xpForCurrentLevel ?? 0"
             :required-xp="level?.xpForNextLevel ?? 1" :avatar-url="user.avatarUrl" :title="level?.title" />
-          <span v-if="statsDiff?.scoreXpDiff" class="profile-hero__xp-trend"
-            :class="statsDiff.scoreXpDiff > 0 ? 'profile-hero__xp-trend--up' : 'profile-hero__xp-trend--down'">
-            {{ statsDiff.scoreXpDiff > 0 ? '\u25B2' : '\u25BC' }}
-            {{ statsDiff.scoreXpDiff > 0 ? '+' : '' }}{{ Math.round(statsDiff.scoreXpDiff) }} XP
+          <span v-if="totalXpDiff" class="profile-hero__xp-trend"
+            :class="totalXpDiff > 0 ? 'profile-hero__xp-trend--up' : 'profile-hero__xp-trend--down'">
+            {{ totalXpDiff > 0 ? '\u25B2' : '\u25BC' }}
+            {{ totalXpDiff > 0 ? '+' : '' }}{{ Math.round(totalXpDiff) }} XP
+            <span class="profile-hero__xp-info" tabindex="0" aria-label="XP breakdown">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span class="profile-hero__xp-tooltip">
+                <span class="profile-hero__xp-tooltip-row">
+                  <span class="profile-hero__xp-tooltip-label">Score XP</span>
+                  <span class="profile-hero__xp-tooltip-value">{{ (statsDiff?.scoreXpDiff ?? 0) >= 0 ? '+' : '' }}{{
+                    Math.round(statsDiff?.scoreXpDiff ?? 0) }}</span>
+                </span>
+                <span class="profile-hero__xp-tooltip-row">
+                  <span class="profile-hero__xp-tooltip-label">Milestone XP</span>
+                  <span class="profile-hero__xp-tooltip-value profile-hero__xp-tooltip-value--milestone">{{
+                    (statsDiff?.milestoneXpDiff ?? 0) >= 0 ? '+' : '' }}{{ Math.round(statsDiff?.milestoneXpDiff ?? 0)
+                    }}</span>
+                </span>
+                <span class="profile-hero__xp-tooltip-row">
+                  <span class="profile-hero__xp-tooltip-label">Set Bonus XP</span>
+                  <span class="profile-hero__xp-tooltip-value profile-hero__xp-tooltip-value--set-bonus">{{
+                    (statsDiff?.milestoneSetBonusXpDiff ?? 0) >= 0 ? '+' : '' }}{{
+                      Math.round(statsDiff?.milestoneSetBonusXpDiff ?? 0) }}</span>
+                </span>
+              </span>
+            </span>
           </span>
         </div>
 
@@ -289,6 +322,9 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
 }
 
 .profile-hero__xp-trend {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
   font-family: var(--font-mono);
   font-size: var(--text-caption);
 }
@@ -299,6 +335,81 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
 
 .profile-hero__xp-trend--down {
   color: var(--error);
+}
+
+.profile-hero__xp-info {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  cursor: help;
+  transition: color 120ms ease;
+}
+
+.profile-hero__xp-info:hover,
+.profile-hero__xp-info:focus-visible {
+  color: var(--text-secondary);
+}
+
+.profile-hero__xp-tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-overlay);
+  border-radius: var(--radius-card);
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.profile-hero__xp-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: var(--bg-overlay);
+}
+
+.profile-hero__xp-info:hover .profile-hero__xp-tooltip,
+.profile-hero__xp-info:focus-visible .profile-hero__xp-tooltip {
+  opacity: 1;
+}
+
+.profile-hero__xp-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.profile-hero__xp-tooltip-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-caption);
+  color: var(--text-secondary);
+}
+
+.profile-hero__xp-tooltip-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  color: var(--accent-overall);
+}
+
+.profile-hero__xp-tooltip-value--milestone {
+  color: var(--tier-gold);
+}
+
+.profile-hero__xp-tooltip-value--set-bonus {
+  color: var(--tier-platinum);
 }
 
 .profile-hero__details {

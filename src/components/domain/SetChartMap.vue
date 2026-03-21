@@ -118,7 +118,8 @@ onUnmounted(() => {
         <span v-if="hoveredSet.description" class="set-chart-map__tooltip-desc">{{ hoveredSet.description }}</span>
         <span class="set-chart-map__tooltip-stat">
           {{ hoveredMilestoneCount }} milestones
-          <template v-if="hoveredCompletedCount > 0"> · {{ hoveredCompletedCount }} completed</template>
+          <template v-if="hoveredCompletedCount > 0">
+            <br> {{ hoveredCompletedCount }} completed</template>
         </span>
         <span v-if="hoveredSet.setBonusXp > 0" class="set-chart-map__tooltip-xp">+{{ hoveredSet.setBonusXp }} XP
           bonus</span>

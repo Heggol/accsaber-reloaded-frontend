@@ -172,6 +172,31 @@ async function deactivate(m: MilestoneResponse) {
   }
 }
 
+const showEditModal = ref(false)
+const editTarget = ref<MilestoneResponse | null>(null)
+const editForm = ref({ title: '', description: '' })
+const editLoading = ref(false)
+
+function openEdit(m: MilestoneResponse) {
+  editTarget.value = m
+  editForm.value = { title: m.title, description: m.description }
+  showEditModal.value = true
+}
+
+async function saveEdit() {
+  if (!editTarget.value) return
+  editLoading.value = true
+  try {
+    const { updateMilestone } = await import('@/api/admin/milestones')
+    const updated = await updateMilestone(editTarget.value.id, editForm.value)
+    const idx = milestones.value.findIndex((x) => x.id === updated.id)
+    if (idx !== -1) milestones.value[idx] = updated
+    showEditModal.value = false
+  } finally {
+    editLoading.value = false
+  }
+}
+
 async function activate(m: MilestoneResponse) {
   milestoneActionLoading.value[m.id] = true
   try {
@@ -432,6 +457,7 @@ const STATUS_OPTIONS = [
                 </div>
               </div>
               <div class="milestone-card__actions">
+                <BaseButton size="sm" @click="openEdit(m)">Edit</BaseButton>
                 <BaseButton v-if="m.status === 'DRAFT'" size="sm" variant="primary"
                   :loading="milestoneActionLoading[m.id]" @click="activate(m)">
                   Activate
@@ -596,6 +622,17 @@ const STATUS_OPTIONS = [
     </div>
     <template #footer>
       <BaseButton @click="showPrereqModal = false">Close</BaseButton>
+    </template>
+  </BaseModal>
+
+  <BaseModal :open="showEditModal" :title="`Edit - ${editTarget?.title ?? ''}`" @close="showEditModal = false">
+    <div class="modal-form">
+      <BaseInput v-model="editForm.title" label="Title" required />
+      <BaseInput v-model="editForm.description" label="Description" />
+    </div>
+    <template #footer>
+      <BaseButton @click="showEditModal = false">Cancel</BaseButton>
+      <BaseButton variant="primary" :loading="editLoading" @click="saveEdit">Save</BaseButton>
     </template>
   </BaseModal>
 </template>

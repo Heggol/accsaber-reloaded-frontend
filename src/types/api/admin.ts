@@ -166,6 +166,11 @@ export interface LinkMilestoneMapRequest {
   mapDifficultyIds: string[]
 }
 
+export interface UpdateMilestoneRequest {
+  title?: string
+  description?: string
+}
+
 export interface CreateMilestoneSetRequest {
   title: string
   description: string

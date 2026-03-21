@@ -106,6 +106,8 @@ export interface StatsDiffResponse {
   categoryId: string
   apDiff: number
   scoreXpDiff: number
+  milestoneXpDiff: number
+  milestoneSetBonusXpDiff: number
   averageAccDiff: number
   averageApDiff: number
   rankingDiff: number
