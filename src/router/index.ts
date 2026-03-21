@@ -10,13 +10,18 @@ declare module 'vue-router' {
   }
 }
 
+const isAdminSubdomain = window.location.hostname.startsWith('admin.')
+
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
     {
       path: '/',
       name: 'home',
-      component: () => import('@/views/HomePage.vue'),
+      component: isAdminSubdomain
+        ? () => import('@/views/staff/AdminPage.vue')
+        : () => import('@/views/HomePage.vue'),
+      meta: isAdminSubdomain ? { requiresStaff: true, requiredRole: 'ADMIN' as StaffRole } : {},
     },
     {
       path: '/leaderboards',
@@ -110,10 +115,6 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to) => {
-  if (to.path === '/' && window.location.hostname.startsWith('admin.')) {
-    return { name: 'admin' }
-  }
-
   if (to.meta.requiresStaff) {
     const auth = useAuthStore()
 
