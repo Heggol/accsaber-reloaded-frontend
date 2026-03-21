@@ -532,6 +532,11 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
 }
 
 @media (max-width: 767px) {
+  .set-detail {
+    padding: var(--space-md);
+    gap: var(--space-lg);
+  }
+
   .set-detail__header {
     flex-direction: column;
     align-items: flex-start;
@@ -542,8 +547,12 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
   }
 
   .set-detail__constellation {
-    aspect-ratio: 1;
-    max-height: 300px;
+    aspect-ratio: 4 / 3;
+    max-height: 360px;
+  }
+
+  .set-detail__preview-hint {
+    padding: var(--space-md);
   }
 }
 

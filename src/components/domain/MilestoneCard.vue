@@ -201,4 +201,25 @@ const progressPercent = computed(() => {
   font-size: 0.625rem;
   color: var(--text-tertiary);
 }
+
+@media (max-width: 767px) {
+  .milestone-card {
+    padding: var(--space-md);
+    min-height: 140px;
+  }
+
+  .milestone-card__desc {
+    font-size: var(--text-body);
+    -webkit-line-clamp: 4;
+  }
+
+  .milestone-card__xp,
+  .milestone-card__completion {
+    font-size: var(--text-body);
+  }
+
+  .milestone-card__tier {
+    font-size: var(--text-body);
+  }
+}
 </style>

@@ -245,4 +245,28 @@ watchEffect(() => {
   gap: var(--space-xs);
   padding: var(--space-sm) var(--space-lg) var(--space-lg);
 }
+
+@media (max-width: 767px) {
+  .milestone-set__header {
+    padding: var(--space-md);
+  }
+
+  .milestone-set__info {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .milestone-set__title {
+    font-size: var(--text-body);
+  }
+
+  .milestone-set__rows {
+    padding: var(--space-xs) var(--space-sm) var(--space-md);
+    gap: var(--space-sm);
+  }
+
+  .milestone-set__bonus {
+    font-size: 0.625rem;
+  }
+}
 </style>

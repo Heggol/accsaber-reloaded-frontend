@@ -471,6 +471,55 @@ function toggleExpand() {
   color: var(--text-tertiary);
 }
 
+@media (max-width: 767px) {
+  .milestone-detail--compact {
+    padding: var(--space-md);
+    gap: var(--space-xs);
+  }
+
+  .milestone-detail--compact .milestone-detail__header {
+    flex-wrap: wrap;
+  }
+
+  .milestone-detail--compact .milestone-detail__title {
+    white-space: normal;
+    font-size: var(--text-card-title);
+  }
+
+  .milestone-detail--compact .milestone-detail__title-group {
+    flex-direction: column;
+    gap: 2px;
+  }
+
+  .milestone-detail__inline-desc {
+    display: none;
+  }
+
+  .milestone-detail__compact-meta {
+    width: 100%;
+    padding-top: var(--space-xs);
+    padding-left: calc(20px + var(--space-md));
+    gap: var(--space-sm);
+    flex-wrap: wrap;
+  }
+
+  .milestone-detail__tier {
+    font-size: var(--text-caption);
+  }
+
+  .milestone-detail:not(.milestone-detail--compact) {
+    padding: var(--space-md);
+  }
+
+  .milestone-detail__desc {
+    font-size: var(--text-body);
+  }
+
+  .milestone-detail__score-text {
+    font-size: var(--text-body);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .milestone-detail__chevron,
