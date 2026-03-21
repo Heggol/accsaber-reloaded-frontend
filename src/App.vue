@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import { useAuthStore } from '@/stores/auth'
-import { computed, onMounted, ref } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const sidebarCollapsed = ref(false)
 const authStore = useAuthStore()
-const isAdminSubdomain = computed(() => window.location.hostname.startsWith('admin.'))
 
 onMounted(() => {
   if (authStore.isLoggedIn) {
@@ -15,8 +14,8 @@ onMounted(() => {
 </script>
 
 <template>
-  <AppSidebar v-if="!isAdminSubdomain" v-model:collapsed="sidebarCollapsed" />
-  <main class="main-content" :class="{ 'main-content--sidebar-collapsed': sidebarCollapsed, 'main-content--no-sidebar': isAdminSubdomain }">
+  <AppSidebar v-model:collapsed="sidebarCollapsed" />
+  <main class="main-content" :class="{ 'main-content--sidebar-collapsed': sidebarCollapsed }">
     <router-view v-slot="{ Component }">
       <transition name="page" mode="out-in">
         <component :is="Component" />
@@ -37,9 +36,6 @@ onMounted(() => {
   margin-left: 56px;
 }
 
-.main-content--no-sidebar {
-  margin-left: 0;
-}
 
 .page-enter-active,
 .page-leave-active {

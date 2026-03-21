@@ -26,20 +26,36 @@ function handleUserClick() {
   }
 }
 
-const navItems = [
+const isAdminSubdomain = window.location.hostname.startsWith('admin.')
+
+const publicNavItems = [
   { to: '/', label: 'Home', icon: 'home' },
   { to: '/leaderboards', label: 'Leaderboards', icon: 'leaderboard' },
   { to: '/maps', label: 'Maps', icon: 'map' },
   { to: '/milestones', label: 'Milestones', icon: 'milestone' },
-  //  { to: '/ranked-queue', label: 'Ranked Queue', icon: 'queue' },
-  //  { to: '/stats', label: 'Stats', icon: 'stats' },
   { to: '/score-feed', label: 'Score Feed', icon: 'feed' },
-  //  { to: '/campaigns', label: 'Campaigns', icon: 'campaign' },
-  //  { to: '/whats-new', label: "What's New", icon: 'news' },
 ]
 
+const adminNavItems = [
+  { to: '/?tab=users', label: 'Users', icon: 'admin' },
+  { to: '/?tab=staff', label: 'Staff', icon: 'admin' },
+  { to: '/?tab=maps', label: 'Maps', icon: 'map' },
+  { to: '/?tab=batches', label: 'Batches', icon: 'admin' },
+  { to: '/?tab=milestones', label: 'Milestones', icon: 'milestone' },
+  { to: '/?tab=campaigns', label: 'Campaigns', icon: 'admin' },
+  { to: '/?tab=curves', label: 'Curves', icon: 'admin' },
+  { to: '/?tab=operations', label: 'Operations', icon: 'admin' },
+  { to: '/?tab=duplicates', label: 'Duplicates', icon: 'admin' },
+]
+
+const navItems = isAdminSubdomain ? adminNavItems : publicNavItems
+
 function isActive(to: string): boolean {
-  if (to === '/') return route.path === '/'
+  if (to.includes('?tab=')) {
+    const tab = to.split('?tab=')[1]
+    return route.query.tab === tab
+  }
+  if (to === '/') return route.path === '/' && !route.query.tab
   return route.path.startsWith(to)
 }
 </script>
@@ -86,6 +102,11 @@ function isActive(to: string): boolean {
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
             <line x1="4" y1="22" x2="4" y2="15" />
+          </svg>
+          <svg v-else-if="item.icon === 'admin'" width="20" height="20" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="3" />
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
           </svg>
           <svg v-else-if="item.icon === 'campaign'" width="20" height="20" viewBox="0 0 24 24" fill="none"
             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
