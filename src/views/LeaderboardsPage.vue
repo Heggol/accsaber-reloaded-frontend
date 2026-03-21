@@ -132,8 +132,12 @@ function rowClass(row: Record<string, unknown>): Record<string, boolean> {
   }
 }
 
+function playerRowTo(row: Record<string, unknown>) {
+  return { name: 'player-profile', params: { userId: row.userId as string } }
+}
+
 function handleRowClick(row: Record<string, unknown>) {
-  router.push({ name: 'player-profile', params: { userId: row.userId as string } })
+  router.push(playerRowTo(row))
 }
 
 function handleCategoryChange(code: CategoryCode) {
@@ -180,7 +184,8 @@ watch(() => categoryStore.loaded, (loaded) => {
 
     <div class="leaderboards__table">
       <DataTable :columns="columns" :rows="rows" :sort-state="sortState" :loading="loading" :loading-rows="10"
-        :row-class="rowClass" row-clickable empty-message="No players found for this category" @sort="setSort"
+        :row-class="rowClass" row-clickable :row-to="playerRowTo"
+        empty-message="No players found for this category" @sort="setSort"
         @row-click="handleRowClick">
         <template #cell-rank="{ value, row }">
           <span v-if="countryFilter && row.countryRank" class="rank-cell" :class="getRankClass(row.countryRank as number)">
@@ -212,11 +217,11 @@ watch(() => categoryStore.loaded, (loaded) => {
         </template>
 
         <template #mobile-card="{ row }">
-          <div class="lb-card" :class="[
+          <router-link :to="{ name: 'player-profile', params: { userId: row.userId as string } }" class="lb-card" :class="[
             { 'lb-card--highlighted': row.userId === highlightedUserId },
             { 'lb-card--self-highlight': !!authStore.userId && row.userId === authStore.userId },
             rowClass(row)
-          ]" :data-user-id="row.userId" @click="handleRowClick(row)">
+          ]" :data-user-id="row.userId">
             <span class="lb-card__rank rank-cell" :class="getRankClass(countryFilter && row.countryRank ? row.countryRank as number : row.rank as number)">
               #{{ countryFilter && row.countryRank ? row.countryRank : row.rank }}
             </span>
@@ -226,7 +231,7 @@ watch(() => categoryStore.loaded, (loaded) => {
               <CountryFlag :country="(row.country as string)" />
             </div>
             <span class="lb-card__ap ap-cell">{{ (row.ap as number).toFixed(2) }}</span>
-          </div>
+          </router-link>
         </template>
       </DataTable>
     </div>
@@ -365,6 +370,8 @@ watch(() => categoryStore.loaded, (loaded) => {
   cursor: pointer;
   min-height: 48px;
   transition: border-color 120ms ease;
+  text-decoration: none;
+  color: inherit;
 }
 
 .lb-card:hover {

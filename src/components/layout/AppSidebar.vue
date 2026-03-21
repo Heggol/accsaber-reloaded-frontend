@@ -128,7 +128,13 @@ function isActive(to: string): boolean {
     </div>
 
     <div class="sidebar__bottom">
-      <button class="sidebar__item sidebar__user-btn" aria-label="User profile" @click="handleUserClick">
+      <component
+        :is="authStore.isLoggedIn && authStore.userId ? 'router-link' : 'button'"
+        :to="authStore.isLoggedIn && authStore.userId ? { name: 'player-profile', params: { userId: authStore.userId } } : undefined"
+        class="sidebar__item sidebar__user-btn"
+        aria-label="User profile"
+        @click="!authStore.isLoggedIn && (loginModalOpen = true)"
+      >
         <span class="sidebar__icon">
           <img v-if="authStore.isLoggedIn && authStore.userProfile?.avatarUrl" :src="authStore.userProfile.avatarUrl"
             :alt="authStore.userProfile.name" class="sidebar__user-avatar" />
@@ -144,7 +150,7 @@ function isActive(to: string): boolean {
         <span class="sidebar__tooltip">
           {{ authStore.isLoggedIn && authStore.userProfile ? authStore.userProfile.name : 'Log In' }}
         </span>
-      </button>
+      </component>
 
       <button v-if="authStore.isLoggedIn" class="sidebar__item sidebar__logout-btn" aria-label="Log out"
         @click="authStore.clearUserId()">

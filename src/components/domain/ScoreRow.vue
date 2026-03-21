@@ -22,15 +22,22 @@ const modifiersText = computed(() =>
   props.score.modifiers.length > 0 ? props.score.modifiers.join(', ') : '-',
 )
 
-function handleClick() {
-  if (props.score.mapId) {
-    router.push({ path: `/maps/${props.score.mapId}` })
-  }
+const mapHref = computed(() =>
+  props.score.mapId ? router.resolve({ path: `/maps/${props.score.mapId}` }).href : undefined,
+)
+
+function handleClick(e: MouseEvent) {
+  if (!mapHref.value) return
+  if (e.ctrlKey || e.metaKey || e.button === 1) return // let the <a> handle it
+  e.preventDefault()
+  router.push({ path: `/maps/${props.score.mapId}` })
 }
 </script>
 
 <template>
-  <div
+  <component
+    :is="mapHref ? 'a' : 'div'"
+    :href="mapHref"
     class="score-row"
     :class="{ 'score-row--clickable': !!score.mapId }"
     :style="{ '--row-index': rowIndex ?? 0 }"
@@ -46,12 +53,14 @@ function handleClick() {
     <span class="score-row__weighted">{{ score.weightedAp.toFixed(2) }}</span>
     <span class="score-row__date" :style="{ color: dateRecency }">{{ relativeDate }}</span>
     <span class="score-row__modifiers">{{ modifiersText }}</span>
-  </div>
+  </component>
 </template>
 
 <style scoped>
 .score-row {
   display: grid;
+  text-decoration: none;
+  color: inherit;
   grid-template-columns: 36px 36px 1fr 70px 80px 80px 80px 80px 90px 50px;
   align-items: center;
   gap: var(--space-sm);
@@ -60,6 +69,7 @@ function handleClick() {
   border-left: 2px solid transparent;
   transition: border-color 120ms ease, background-color 120ms ease;
 }
+
 
 .score-row:nth-child(even) {
   background: var(--bg-surface);

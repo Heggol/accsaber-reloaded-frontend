@@ -2,6 +2,7 @@
 import DataTable from '@/components/common/DataTable.vue'
 import PaginationControls from '@/components/common/PaginationControls.vue'
 import type { SortState, TableColumn } from '@/types/display'
+import type { RouteLocationRaw } from 'vue-router'
 import { formatRelativeDate, isRecentDate } from '@/utils/formatters'
 import { getRankClass } from '@/utils/ranking'
 import { computed, useSlots } from 'vue'
@@ -14,6 +15,7 @@ withDefaults(defineProps<{
   loadingRows?: number
   emptyMessage?: string
   rowClickable?: boolean
+  rowTo?: (row: Record<string, unknown>) => RouteLocationRaw
   page?: number
   totalPages?: number
   medalRanks?: boolean
@@ -58,6 +60,7 @@ const customSlots = computed(() => {
       :loading="loading"
       :loading-rows="loadingRows"
       :row-clickable="rowClickable"
+      :row-to="rowTo"
       :row-class="rowClass"
       :empty-message="emptyMessage"
       @sort="emit('sort', $event)"

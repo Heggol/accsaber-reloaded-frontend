@@ -116,6 +116,10 @@ async function fetchScores() {
   loading.value = false
 }
 
+function scoreRowTo(row: Record<string, unknown>) {
+  return row.mapId ? { path: `/maps/${row.mapId}` } : undefined
+}
+
 function handleRowClick(row: Record<string, unknown>) {
   if (row.mapId) {
     router.push({ path: `/maps/${row.mapId}` })
@@ -150,6 +154,7 @@ watch(
       :page="currentPage"
       :total-pages="totalPages"
       row-clickable
+      :row-to="scoreRowTo"
       :empty-message="props.search ? `No maps matching &quot;${props.search}&quot;` : 'No scores found'"
       @sort="setSort"
       @row-click="handleRowClick"

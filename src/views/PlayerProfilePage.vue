@@ -68,26 +68,34 @@ const breadcrumbs = computed(() => [
   { label: user.value?.name ?? 'Player' },
 ])
 
-function navigateToGlobalRank() {
+const globalRankRoute = computed(() => {
   const ranking = activeStats.value?.ranking
-  if (!ranking) return
+  if (!ranking) return null
   const page = Math.ceil(ranking / 50)
-  router.push({
+  return {
     name: 'leaderboards-category',
     params: { categoryCode: activeCategory.value },
     query: { page: String(page), highlight: userId.value },
-  })
-}
+  }
+})
 
-function navigateToCountryRank() {
+const countryRankRoute = computed(() => {
   const ranking = activeStats.value?.countryRanking
-  if (!ranking || !user.value) return
+  if (!ranking || !user.value) return null
   const page = Math.ceil(ranking / 50)
-  router.push({
+  return {
     name: 'leaderboards-category',
     params: { categoryCode: activeCategory.value },
     query: { country: user.value.country, page: String(page), highlight: userId.value },
-  })
+  }
+})
+
+function navigateToGlobalRank() {
+  if (globalRankRoute.value) router.push(globalRankRoute.value)
+}
+
+function navigateToCountryRank() {
+  if (countryRankRoute.value) router.push(countryRankRoute.value)
 }
 
 async function fetchProfile() {
@@ -214,6 +222,7 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
             <div class="profile-hero__rank-block profile-hero__rank-block--clickable" role="button" tabindex="0"
               aria-label="View on global leaderboard" @click="navigateToGlobalRank"
               @keydown.enter="navigateToGlobalRank">
+              <router-link v-if="globalRankRoute" :to="globalRankRoute" class="profile-hero__rank-link" tabindex="-1" aria-hidden="true" />
               <StatBlock label="Global Rank" :value="activeStats?.ranking ?? 0" :decimals="0"
                 :trend="statsDiff?.rankingDiff ? -statsDiff.rankingDiff : undefined" />
               <span v-if="activeStats?.ranking && activeStats.ranking <= 3" class="profile-hero__rank-badge"
@@ -222,6 +231,7 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
             <div class="profile-hero__rank-block profile-hero__rank-block--clickable" role="button" tabindex="0"
               aria-label="View on country leaderboard" @click="navigateToCountryRank"
               @keydown.enter="navigateToCountryRank">
+              <router-link v-if="countryRankRoute" :to="countryRankRoute" class="profile-hero__rank-link" tabindex="-1" aria-hidden="true" />
               <StatBlock label="Country Rank" :value="activeStats?.countryRanking ?? 0" :decimals="0"
                 :trend="statsDiff?.countryRankingDiff ? -statsDiff.countryRankingDiff : undefined" />
               <span v-if="activeStats?.countryRanking && activeStats.countryRanking <= 3"
@@ -450,6 +460,13 @@ watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
   cursor: pointer;
   border-radius: var(--radius-card);
   transition: filter 120ms ease;
+}
+
+.profile-hero__rank-link {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 .profile-hero__rank-block--clickable:hover {

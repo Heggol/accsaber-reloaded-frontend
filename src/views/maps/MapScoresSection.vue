@@ -106,8 +106,12 @@ function scoreRowClass(row: Record<string, unknown>): Record<string, boolean> | 
   return { 'data-table__row--self-highlight': row._userId === authStore.userId }
 }
 
+function playerRowTo(row: Record<string, unknown>) {
+  return { name: 'player-profile', params: { userId: row._userId as string } }
+}
+
 function handleRowClick(row: Record<string, unknown>) {
-  router.push({ name: 'player-profile', params: { userId: row._userId as string } })
+  router.push(playerRowTo(row))
 }
 
 function openDetail(index: number, event: Event) {
@@ -203,6 +207,7 @@ watch(
       :total-pages="totalPages"
       medal-ranks
       row-clickable
+      :row-to="playerRowTo"
       :row-class="scoreRowClass"
       empty-message="No scores recorded yet."
       @sort="setSort"
@@ -251,7 +256,7 @@ watch(
       </template>
 
       <template #mobile-card="{ row }">
-        <div class="ms-card" :class="{ 'ms-card--self-highlight': !!authStore.userId && row._userId === authStore.userId }" @click="handleRowClick(row)">
+        <router-link :to="playerRowTo(row)" class="ms-card" :class="{ 'ms-card--self-highlight': !!authStore.userId && row._userId === authStore.userId }">
           <span class="ms-card__rank map-scores__rank" :class="getRankClass(countryFilter ? (row.countryRank as number) : (row.rank as number))">
             #{{ countryFilter ? row.countryRank : row.rank }}
           </span>
@@ -272,7 +277,7 @@ watch(
               <path d="M2 13H14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" />
             </svg>
           </button>
-        </div>
+        </router-link>
       </template>
     </ScoreTable>
 
@@ -368,6 +373,8 @@ watch(
   cursor: pointer;
   min-height: 48px;
   transition: border-color 120ms ease;
+  text-decoration: none;
+  color: inherit;
 }
 
 .ms-card:hover {

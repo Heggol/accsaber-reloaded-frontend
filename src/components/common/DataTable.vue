@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { SortState, TableColumn } from '@/types/display';
+import type { RouteLocationRaw } from 'vue-router';
 import { computed, useSlots } from 'vue';
 import DataTableCardFallback from './DataTableCardFallback.vue';
 import SkeletonLoader from './SkeletonLoader.vue';
@@ -9,6 +10,7 @@ const props = defineProps<{
   rows: Record<string, unknown>[]
   sortState?: SortState
   rowClickable?: boolean
+  rowTo?: (row: Record<string, unknown>) => RouteLocationRaw
   loading?: boolean
   loadingRows?: number
   emptyMessage?: string
@@ -71,10 +73,11 @@ function sortIcon(col: TableColumn): string {
             <tr v-for="(row, index) in rows" :key="index" class="data-table__row"
               :class="[{ 'data-table__row--clickable': rowClickable }, rowClass?.(row, index)]"
               @click="rowClickable && emit('rowClick', row, index)">
-              <td v-for="col in columns" :key="col.key" class="data-table__td" :class="{
+              <td v-for="(col, colIdx) in columns" :key="col.key" class="data-table__td" :class="{
                 'data-table__td--mono': col.mono,
                 [`data-table__td--${col.align ?? 'left'}`]: true,
               }">
+                <router-link v-if="colIdx === 0 && rowTo" :to="rowTo(row)" class="data-table__row-link" tabindex="-1" aria-hidden="true" />
                 <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]" :index="index">
                   {{ row[col.key] }}
                 </slot>
@@ -169,6 +172,7 @@ function sortIcon(col: TableColumn): string {
 }
 
 .data-table__row {
+  position: relative;
   height: 48px;
   border-left: 2px solid transparent;
   transition: border-color 120ms ease, background-color 120ms ease;
@@ -196,6 +200,20 @@ function sortIcon(col: TableColumn): string {
   font-size: var(--text-body);
   color: var(--text-primary);
   vertical-align: middle;
+}
+
+.data-table__row-link {
+  position: static;
+  display: inline;
+  text-decoration: none;
+  color: inherit;
+}
+
+.data-table__row-link::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
 }
 
 .data-table__td--left {
