@@ -1,20 +1,46 @@
 <script setup lang="ts">
+import BaseSelect from '@/components/common/BaseSelect.vue'
 import BaseTabs from '@/components/common/BaseTabs.vue'
 import SkeletonLoader from '@/components/common/SkeletonLoader.vue'
 import MilestoneDetail from '@/components/domain/MilestoneDetail.vue'
+import type { MilestoneSort } from '@/api/milestones'
 import type { MilestoneCompletionResponse, MilestoneSetResponse } from '@/types/api/milestones'
 import type { Tab } from '@/types/display'
-import { computed, ref, watchEffect } from 'vue'
+import { computed, ref, watch, watchEffect } from 'vue'
 
 const props = defineProps<{
   milestones: MilestoneCompletionResponse[]
   sets: MilestoneSetResponse[]
+  sort?: MilestoneSort
   loading?: boolean
   loggedIn?: boolean
 }>()
 
+const emit = defineEmits<{
+  'update:sort': [sort: MilestoneSort]
+}>()
+
 const expandedSets = ref<Set<string>>(new Set())
 const viewMode = ref('all')
+const activeSort = ref<string>(props.sort ?? 'tier')
+
+watch(() => props.sort, (v) => { if (v) activeSort.value = v })
+
+function onSortChange(value: string) {
+  activeSort.value = value
+  emit('update:sort', value as MilestoneSort)
+}
+
+const sortOptions = computed(() => {
+  const options = [
+    { value: 'tier', label: 'Tier' },
+    { value: 'completions', label: 'Most Completed' },
+  ]
+  if (props.loggedIn) {
+    options.push({ value: 'completedAt', label: 'Recently Completed' })
+  }
+  return options
+})
 
 const viewTabs = computed<Tab[]>(() => {
   const tabs: Tab[] = [
@@ -44,6 +70,8 @@ const completedMilestones = computed(() =>
 const activeMilestones = computed(() =>
   viewMode.value === 'completed' ? completedMilestones.value : props.milestones,
 )
+
+const isFlatSort = computed(() => activeSort.value !== 'tier')
 
 const groups = computed<MilestoneGroup[]>(() => {
   const setMap = new Map<string, MilestoneSetResponse>()
@@ -91,7 +119,11 @@ watchEffect(() => {
 
 <template>
   <div class="milestone-list-view">
-    <BaseTabs :tabs="viewTabs" :model-value="viewMode" @update:model-value="viewMode = $event" />
+    <div class="milestone-list-view__controls">
+      <BaseTabs :tabs="viewTabs" :model-value="viewMode" @update:model-value="viewMode = $event" />
+      <BaseSelect :model-value="activeSort" :options="sortOptions"
+        @update:model-value="onSortChange" />
+    </div>
 
     <template v-if="loading">
       <SkeletonLoader v-for="i in 3" :key="i" variant="card" />
@@ -109,6 +141,13 @@ watchEffect(() => {
     <p v-else-if="groups.length === 0" class="milestone-list-view__empty">
       {{ viewMode === 'completed' ? 'No completed milestones yet' : 'No milestone progress found' }}
     </p>
+
+    <template v-else-if="isFlatSort">
+      <div class="milestone-set__rows milestone-set__rows--flat">
+        <MilestoneDetail v-for="m in activeMilestones" :key="m.milestoneId" :milestone="m" :logged-in="loggedIn"
+          compact />
+      </div>
+    </template>
 
     <template v-else>
       <div v-for="group in groups" :key="group.setId" class="milestone-set">
@@ -147,6 +186,13 @@ watchEffect(() => {
   display: flex;
   flex-direction: column;
   gap: var(--space-lg);
+}
+
+.milestone-list-view__controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
 }
 
 .milestone-list-view__empty {
@@ -244,6 +290,11 @@ watchEffect(() => {
   flex-direction: column;
   gap: var(--space-xs);
   padding: var(--space-sm) var(--space-lg) var(--space-lg);
+}
+
+.milestone-set__rows--flat {
+  padding: 0;
+  gap: var(--space-sm);
 }
 
 @media (max-width: 767px) {

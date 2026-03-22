@@ -6,6 +6,7 @@ import SetChartMap from '@/components/domain/SetChartMap.vue'
 import SetDetail from '@/components/domain/SetDetail.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
+import type { MilestoneSort } from '@/api/milestones'
 import type { MilestoneCompletionResponse, MilestoneSetResponse, PrerequisiteLinkResponse } from '@/types/api/milestones'
 import type { CrossSetEdge, EnrichedPrerequisite } from '@/types/milestones'
 import { enrichPrerequisites, extractCrossSetEdges } from '@/utils/milestonePrereqs'
@@ -20,6 +21,7 @@ const router = useRouter()
 const loading = ref(true)
 const sets = ref<MilestoneSetResponse[]>([])
 const milestones = ref<MilestoneCompletionResponse[]>([])
+const milestoneSort = ref<MilestoneSort>('tier')
 const isMobile = ref(false)
 const viewMode = ref<'chart' | 'list'>('chart')
 
@@ -77,7 +79,7 @@ async function fetchData() {
     const { getMilestoneSets, getMilestoneCompletionStats } = await import('@/api/milestones')
     const [setsRes, completionRes] = await Promise.all([
       getMilestoneSets({ userId: authStore.userId ?? undefined, size: 100 }),
-      getMilestoneCompletionStats(authStore.userId ?? undefined),
+      getMilestoneCompletionStats(authStore.userId ?? undefined, milestoneSort.value),
     ])
     sets.value = setsRes.content
     milestones.value = completionRes
@@ -102,6 +104,16 @@ async function fetchAllPrerequisites(allSets: MilestoneSetResponse[]) {
     map.set(allSets[i].id, result.status === 'fulfilled' ? result.value : [])
   }
   prerequisitesBySet.value = map
+}
+
+async function handleSortChange(sort: MilestoneSort) {
+  milestoneSort.value = sort
+  try {
+    const { getMilestoneCompletionStats } = await import('@/api/milestones')
+    milestones.value = await getMilestoneCompletionStats(authStore.userId ?? undefined, sort)
+  } catch {
+    milestones.value = []
+  }
 }
 
 function handleResize() { isMobile.value = window.innerWidth < 768 }
@@ -180,13 +192,15 @@ watch(() => authStore.userId, fetchData)
     </div>
 
     <template v-else-if="viewMode === 'list' && !selectedSetId">
-      <MilestoneListView :milestones="milestones" :sets="sets" :logged-in="authStore.isLoggedIn" />
+      <MilestoneListView :milestones="milestones" :sets="sets" :sort="milestoneSort"
+        :logged-in="authStore.isLoggedIn" @update:sort="handleSortChange" />
     </template>
 
     <Transition v-else name="zoom" mode="out-in">
       <SetDetail v-if="selectedSet" :key="selectedSet.id" :set="selectedSet" :milestones="selectedMilestones"
-        :prerequisites="enrichedSelectedPrerequisites" :all-milestones="milestones" :logged-in="authStore.isLoggedIn"
-        @back="selectedSetId = null" @navigate-to-set="selectedSetId = $event" />
+        :prerequisites="enrichedSelectedPrerequisites" :all-milestones="milestones" :sort="milestoneSort"
+        :logged-in="authStore.isLoggedIn" @back="selectedSetId = null" @navigate-to-set="selectedSetId = $event"
+        @update:sort="handleSortChange" />
 
       <SetChartMap v-else-if="!isMobile" key="set-chart-map" :sets="sets" :milestones-by-set="milestonesBySet"
         :selected-set-id="selectedSetId" :locked-sets="lockedPlaceholders" :cross-set-edges="crossSetEdges"

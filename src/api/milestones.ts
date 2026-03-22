@@ -35,9 +35,14 @@ export function getSetPrerequisites(setId: string): Promise<PrerequisiteLinkResp
   return get<PrerequisiteLinkResponse[]>(`/milestones/sets/${setId}/prerequisites`)
 }
 
+export type MilestoneSort = 'tier' | 'completions' | 'completedAt'
+
 export function getMilestoneCompletionStats(
   userId?: string,
+  sort?: MilestoneSort,
 ): Promise<MilestoneCompletionResponse[]> {
-  const params = userId ? { userId } : undefined
+  const params: Record<string, string> = {}
+  if (userId) params.userId = userId
+  if (sort && sort !== 'tier') params.sort = sort
   return get<MilestoneCompletionResponse[]>(`/milestones/completion-stats${buildQuery(params)}`)
 }

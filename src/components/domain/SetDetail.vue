@@ -3,6 +3,7 @@ import { usePanZoom } from '@/composables/usePanZoom'
 import type { StarLayout } from '@/composables/useStarChart'
 import type { MilestoneCompletionResponse, MilestoneSetResponse } from '@/types/api/milestones'
 import type { MilestoneTier } from '@/types/display'
+import type { MilestoneSort } from '@/api/milestones'
 import type { EnrichedPrerequisite, GhostNode } from '@/types/milestones'
 import { hashString, seededRandom, TIER_ORDER } from '@/utils/constants'
 import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
@@ -15,12 +16,14 @@ const props = defineProps<{
   milestones: MilestoneCompletionResponse[]
   prerequisites: EnrichedPrerequisite[]
   allMilestones?: MilestoneCompletionResponse[]
+  sort?: MilestoneSort
   loggedIn?: boolean
 }>()
 
 const emit = defineEmits<{
   back: []
   navigateToSet: [setId: string]
+  'update:sort': [sort: MilestoneSort]
 }>()
 
 const constellationRef = ref<HTMLElement | null>(null)
@@ -544,7 +547,8 @@ onUnmounted(() => document.removeEventListener('keydown', onKeydown))
       </div>
     </div>
 
-    <MilestoneListView :milestones="milestones" :sets="[set]" :logged-in="loggedIn" />
+    <MilestoneListView :milestones="milestones" :sets="[set]" :sort="sort" :logged-in="loggedIn"
+      @update:sort="emit('update:sort', $event)" />
   </div>
 </template>
 
