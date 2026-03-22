@@ -13,7 +13,7 @@ const activeTab = ref('all')
 
 const tabs = computed(() => {
   const categoryTabs = categoryStore.categoryInfoList
-    .filter((c) => c.code !== 'overall')
+    .filter((c) => c.code !== 'overall' && c.code !== 'xp')
     .map((c) => ({
       key: c.code,
       label: c.name,
