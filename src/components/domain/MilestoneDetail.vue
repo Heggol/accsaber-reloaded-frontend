@@ -123,7 +123,7 @@ function toggleExpand() {
             <span class="milestone-detail__score-text">
               <strong>{{ accuracy }}%</strong> on
               <em>{{ milestone.songName ?? 'Unknown Song' }}{{ milestone.songAuthor ? ` - ${milestone.songAuthor}` : ''
-                }}</em>
+              }}</em>
               <template v-if="milestone.difficulty"> ({{ formatDifficulty(milestone.difficulty) }})</template>
             </span>
             <span v-if="milestone.mapAuthor" class="milestone-detail__mapper">Mapped by {{ milestone.mapAuthor }}</span>
@@ -153,7 +153,7 @@ function toggleExpand() {
           <span class="milestone-detail__score-text">
             Completed with <strong>{{ accuracy }}%</strong> on
             <em>{{ milestone.songName ?? 'Unknown Song' }}{{ milestone.songAuthor ? ` - ${milestone.songAuthor}` : ''
-              }}</em>
+            }}</em>
             <template v-if="milestone.difficulty"> ({{ formatDifficulty(milestone.difficulty) }})</template>
           </span>
           <span v-if="milestone.mapAuthor" class="milestone-detail__mapper">Mapped by {{ milestone.mapAuthor }}</span>
@@ -456,10 +456,6 @@ function toggleExpand() {
   background: var(--tier-color);
   border-radius: 2px;
   transition: width 300ms ease;
-}
-
-.milestone-detail__progress-bar--done {
-  background: var(--success);
 }
 
 .milestone-detail__progress-text {

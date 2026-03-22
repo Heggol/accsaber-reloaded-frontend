@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Highway, SetNodeLayout } from '@/composables/useStarChart'
-import { computeGridPosition, useStarChart } from '@/composables/useStarChart'
+import { scatterPosition, useStarChart } from '@/composables/useStarChart'
 import type { MilestoneCompletionResponse, MilestoneSetResponse } from '@/types/api/milestones'
 import type { CrossSetEdge } from '@/types/milestones'
 import { hashString } from '@/utils/constants'
@@ -43,7 +43,7 @@ const totalNodeCount = computed(() => props.sets.length + lockedCount.value)
 const lockedPositions = computed(() =>
   (props.lockedSets ?? []).map((ls) => ({
     ...ls,
-    position: computeGridPosition(
+    position: scatterPosition(
       ls.index,
       totalNodeCount.value,
       containerWidth.value,

@@ -261,17 +261,22 @@ const starPositions = computed<StarLayout[]>(() => {
 
   components.sort((a, b) => b.weight - a.weight)
 
-  function layoutNode(id: string, yMin: number, yMax: number, compMaxDepth: number) {
+  function layoutNode(id: string, yMin: number, yMax: number, compMaxDepth: number, bandYMin: number, bandYMax: number) {
     const d = depths.get(id) ?? 0
     const h = hashString(id)
+    const r1 = seededRandom(h)
+    const r2 = seededRandom(h + 7)
+    const r3 = seededRandom(h + 13)
 
     const xBase = compMaxDepth === 0 ? 50 : padding + (d / compMaxDepth) * xRange
-    const xNudge = (seededRandom(h) - 0.5) * 3.5
+    const xNudge = (r1 - 0.5) * 6
     const x = Math.min(100 - padding, Math.max(padding, xBase + xNudge))
 
     const yCenter = (yMin + yMax) / 2
-    const yNudge = (seededRandom(h + 7) - 0.5) * 1.5
-    const y = Math.min(100 - padding, Math.max(padding, yCenter + yNudge))
+    const bandSpan = bandYMax - bandYMin
+    const yDrift = (r2 - 0.5) * bandSpan * 0.25
+    const yWobble = (r3 - 0.5) * 4
+    const y = Math.min(100 - padding, Math.max(padding, yCenter + yDrift + yWobble))
 
     positions.set(id, { x, y })
 
@@ -283,7 +288,7 @@ const starPositions = computed<StarLayout[]>(() => {
     for (const cid of children) {
       const w = weights.get(cid) ?? 1
       const slice = ((yMax - yMin) * w) / totalWeight
-      layoutNode(cid, cursor, cursor + slice, compMaxDepth)
+      layoutNode(cid, cursor, cursor + slice, compMaxDepth, bandYMin, bandYMax)
       cursor += slice
     }
   }
@@ -300,7 +305,7 @@ const starPositions = computed<StarLayout[]>(() => {
     for (const root of comp.roots) {
       const w = weights.get(root.milestoneId) ?? 1
       const rootSlice = ((bandMax - bandMin) * w) / compTotalWeight
-      layoutNode(root.milestoneId, rootCursor, rootCursor + rootSlice, comp.maxDepth)
+      layoutNode(root.milestoneId, rootCursor, rootCursor + rootSlice, comp.maxDepth, bandMin, bandMax)
       rootCursor += rootSlice
     }
 

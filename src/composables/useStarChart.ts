@@ -3,8 +3,6 @@ import type { CrossSetEdge } from '@/types/milestones'
 import { hashString, seededRandom } from '@/utils/constants'
 import type { Ref } from 'vue'
 
-export { hashString, seededRandom }
-
 export interface Position {
   x: number
   y: number
@@ -29,38 +27,49 @@ export interface Highway {
   opacity: number
 }
 
-export function computeGridPosition(
+function scatterPosition(
   index: number,
   totalCount: number,
   width: number,
   height: number,
-  jitterSeed: number,
+  seed: number,
 ): Position {
   if (totalCount <= 0) return { x: width / 2, y: height / 2 }
-  const cols = Math.ceil(Math.sqrt(totalCount))
-  const rows = Math.ceil(totalCount / cols)
-  const cellW = width / cols
-  const cellH = height / rows
-  const col = index % cols
-  const row = Math.floor(index / cols)
+
+  const padX = width * 0.1
+  const padY = height * 0.15
+  const usableW = width - padX * 2
+  const usableH = height - padY * 2
+
+  const r1 = seededRandom(seed)
+  const r2 = seededRandom(seed + 1)
+  const r3 = seededRandom(seed + 5)
+
+  const xBase = totalCount <= 1 ? width / 2 : padX + (index / (totalCount - 1)) * usableW
+  const xJitter = (r1 - 0.5) * (usableW / totalCount) * 0.4
+  const yBase = padY + usableH * 0.5
+  const yOffset = (r2 - 0.5) * usableH * 0.8
+  const yWobble = (r3 - 0.5) * 30
 
   return {
-    x: cellW * (col + 0.5) + seededRandom(jitterSeed) * 40 - 20,
-    y: cellH * (row + 0.5) + seededRandom(jitterSeed + 1) * 40 - 20,
+    x: Math.max(padX, Math.min(width - padX, xBase + xJitter)),
+    y: Math.max(padY, Math.min(height - padY, yBase + yOffset + yWobble)),
   }
 }
+
+export { scatterPosition }
 
 export function useStarChart(
   sets: Ref<MilestoneSetResponse[]>,
   milestonesBySet: Ref<Map<string, MilestoneCompletionResponse[]>>,
 ) {
   function computeSetPositions(containerWidth: number, containerHeight: number, lockedCount = 0): SetNodeLayout[] {
-    const count = sets.value.length
-    if (count === 0) return []
+    if (sets.value.length === 0) return []
 
-    const totalCount = count + lockedCount
+    const sorted = [...sets.value].sort((a, b) => a.title.localeCompare(b.title))
+    const totalCount = sorted.length + lockedCount
 
-    return sets.value.map((set, i) => {
+    return sorted.map((set, i) => {
       const milestones = milestonesBySet.value.get(set.id) ?? []
       const completedCount = milestones.filter((m) => m.userCompleted === true).length
       const completionPct = milestones.length > 0
@@ -70,7 +79,7 @@ export function useStarChart(
       return {
         id: set.id,
         set,
-        position: computeGridPosition(i, totalCount, containerWidth, containerHeight, hashString(set.id)),
+        position: scatterPosition(i, totalCount, containerWidth, containerHeight, hashString(set.id)),
         milestoneCount: milestones.length,
         completionPercentage: set.userCompletionPercentage ?? completionPct,
       }
