@@ -8,7 +8,7 @@ import { useThemeStore } from '@/stores/theme'
 import type { ScoreResponse } from '@/types/api/users'
 import type { MetricType, ScoreDisplay, TimeRange, TimeSeriesPoint } from '@/types/display'
 import { brightenRgb } from '@/utils/color'
-import { SCORE_DETAIL_METRICS, TIME_RANGE_PARAMS } from '@/utils/constants'
+import { BASE_XP_PER_PLAY, SCORE_DETAIL_METRICS, TIME_RANGE_PARAMS } from '@/utils/constants'
 import { formatRelativeDate } from '@/utils/formatters'
 import { computed, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -23,7 +23,7 @@ const emit = defineEmits<{
   close: []
 }>()
 
-type ScoreMetric = 'accuracy' | 'ap'
+type ScoreMetric = 'accuracy' | 'ap' | 'xpCumulative'
 
 const router = useRouter()
 const themeStore = useThemeStore()
@@ -47,21 +47,40 @@ const historicData = ref<ScoreResponse[]>([])
 const selectedMetric = ref<ScoreMetric>('accuracy')
 const selectedRange = ref<TimeRange>('7d')
 
+const playCount = computed(() => historicData.value.length)
 
-const chartPoints = computed<TimeSeriesPoint[]>(() => {
-  return historicData.value
-    .map((s) => ({
-      timestamp: new Date(s.timeSet).getTime(),
-      value: selectedMetric.value === 'accuracy' ? s.accuracy * 100 : s.ap,
-    }))
-    .sort((a, b) => a.timestamp - b.timestamp)
+const totalMapXp = computed(() => {
+  return historicData.value.reduce((sum, s) => sum + (s.xpGained ?? 0), 0)
 })
 
-const chartFormatValue = computed(() =>
-  selectedMetric.value === 'accuracy'
-    ? (v: number) => `${v.toFixed(2)}%`
-    : undefined
-)
+const totalBaseXp = computed(() => BASE_XP_PER_PLAY * playCount.value)
+
+const totalBonusXp = computed(() => totalMapXp.value - totalBaseXp.value)
+
+const chartPoints = computed<TimeSeriesPoint[]>(() => {
+  const sorted = [...historicData.value].sort(
+    (a, b) => new Date(a.timeSet).getTime() - new Date(b.timeSet).getTime(),
+  )
+
+  if (selectedMetric.value === 'xpCumulative') {
+    let cumulative = 0
+    return sorted.map((s) => {
+      cumulative += s.xpGained ?? 0
+      return { timestamp: new Date(s.timeSet).getTime(), value: cumulative }
+    })
+  }
+
+  return sorted.map((s) => ({
+    timestamp: new Date(s.timeSet).getTime(),
+    value: selectedMetric.value === 'accuracy' ? s.accuracy * 100 : s.ap,
+  }))
+})
+
+const chartFormatValue = computed(() => {
+  if (selectedMetric.value === 'accuracy') return (v: number) => `${v.toFixed(2)}%`
+  if (selectedMetric.value === 'xpCumulative') return (v: number) => `${v.toFixed(1)} XP`
+  return undefined
+})
 
 function goToProfile() {
   emit('close')
@@ -120,7 +139,32 @@ watch(
           />
           <StatBlock label="AP" :value="score.ap.toFixed(2)" :accent-color="resolvedAccent" />
           <StatBlock label="Weighted AP" :value="score.weightedAp.toFixed(2)" />
-          <StatBlock v-if="score.xpGained != null" label="XP Gained" :value="score.xpGained.toFixed(1)" />
+          <div v-if="totalMapXp > 0" class="score-detail__xp-wrap">
+            <StatBlock label="Total Map XP" :value="totalMapXp.toFixed(1)" :accent-color="resolvedAccent" />
+            <span class="score-detail__xp-info" tabindex="0" aria-label="XP breakdown">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                <line x1="12" y1="17" x2="12.01" y2="17" />
+              </svg>
+              <span class="score-detail__xp-tooltip">
+                <span class="score-detail__xp-tooltip-row">
+                  <span class="score-detail__xp-tooltip-label">Base XP</span>
+                  <span class="score-detail__xp-tooltip-value">{{ BASE_XP_PER_PLAY }} &times; {{ playCount }} (attempts) = {{ totalBaseXp.toFixed(1) }}</span>
+                </span>
+                <span class="score-detail__xp-tooltip-row">
+                  <span class="score-detail__xp-tooltip-label">Bonus XP</span>
+                  <span class="score-detail__xp-tooltip-value"><span class="score-detail__xp-tooltip-hint">(XP Curve)</span> <span class="score-detail__xp-tooltip-value--bonus">{{ totalBonusXp.toFixed(1) }}</span></span>
+                </span>
+                <span class="score-detail__xp-tooltip-divider" />
+                <span class="score-detail__xp-tooltip-row">
+                  <span class="score-detail__xp-tooltip-label score-detail__xp-tooltip-label--total">Total</span>
+                  <span class="score-detail__xp-tooltip-value score-detail__xp-tooltip-value--total">{{ totalMapXp.toFixed(1) }} XP</span>
+                </span>
+              </span>
+            </span>
+          </div>
         </div>
       </div>
 
@@ -405,6 +449,103 @@ watch(
 .score-detail__mapper-line strong {
   color: var(--text-secondary);
   font-weight: 500;
+}
+
+.score-detail__xp-wrap {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 2px;
+}
+
+.score-detail__xp-info {
+  position: relative;
+  color: var(--text-tertiary);
+  cursor: help;
+  display: inline-flex;
+  align-items: center;
+  margin-top: 2px;
+  transition: color 120ms ease;
+}
+
+.score-detail__xp-info:hover,
+.score-detail__xp-info:focus-visible {
+  color: var(--text-secondary);
+}
+
+.score-detail__xp-tooltip {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: -8px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--bg-overlay);
+  border-radius: 6px;
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 120ms ease;
+  z-index: 100;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.score-detail__xp-tooltip::after {
+  content: '';
+  position: absolute;
+  bottom: 100%;
+  right: 12px;
+  border: 5px solid transparent;
+  border-bottom-color: var(--bg-overlay);
+}
+
+.score-detail__xp-info:hover .score-detail__xp-tooltip,
+.score-detail__xp-info:focus-visible .score-detail__xp-tooltip {
+  opacity: 1;
+}
+
+.score-detail__xp-tooltip-row {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-lg);
+}
+
+.score-detail__xp-tooltip-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-caption);
+  color: var(--text-secondary);
+}
+
+.score-detail__xp-tooltip-label--total {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.score-detail__xp-tooltip-value {
+  font-family: var(--font-mono);
+  font-size: var(--text-caption);
+  color: var(--text-primary);
+}
+
+.score-detail__xp-tooltip-hint {
+  color: var(--text-primary);
+}
+
+.score-detail__xp-tooltip-value--bonus {
+  color: var(--detail-accent, var(--accent));
+}
+
+.score-detail__xp-tooltip-value--total {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.score-detail__xp-tooltip-divider {
+  height: 1px;
+  background: var(--bg-overlay);
+  margin: 2px 0;
 }
 
 .score-detail__links {
