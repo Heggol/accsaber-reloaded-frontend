@@ -57,7 +57,7 @@ const playlistDropdownOpen = ref(false)
 
 const playlistCategories = computed(() =>
   categoryStore.categories
-    .filter((c) => c.code !== 'overall')
+    .filter((c) => c.code !== 'xp')
     .map((c) => ({
       code: c.code,
       name: c.name,
