@@ -34,6 +34,12 @@ function resolveRowKey(row: Record<string, unknown>, index: number): string | nu
   return (row[props.rowKey] as string | number) ?? index
 }
 
+function resolveRowHref(row: Record<string, unknown>): string | undefined {
+  const route = props.rowTo?.(row)
+  if (!route) return undefined
+  return router.resolve(route).href
+}
+
 function handleRowClick(row: Record<string, unknown>, index: number, event: MouseEvent) {
   if (props.rowTo) {
     const route = props.rowTo(row)
@@ -98,7 +104,7 @@ function sortIcon(col: TableColumn): string {
                 'data-table__td--mono': col.mono,
                 [`data-table__td--${col.align ?? 'left'}`]: true,
               }">
-                <router-link v-if="colIdx === 0 && rowTo?.(row)" :to="rowTo!(row)!" class="data-table__row-link" tabindex="-1" aria-hidden="true" />
+                <a v-if="colIdx === 0 && resolveRowHref(row)" :href="resolveRowHref(row)" class="data-table__row-link" tabindex="-1" aria-hidden="true" />
                 <slot :name="`cell-${col.key}`" :row="row" :value="row[col.key]" :index="index">
                   {{ row[col.key] }}
                 </slot>
