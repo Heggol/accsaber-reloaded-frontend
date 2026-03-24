@@ -34,6 +34,15 @@ const error = ref(false)
 const activeTab = ref('scores')
 const initialCategory = (route.query.category as CategoryCode) || 'overall'
 const activeCategory = ref<CategoryCode>(initialCategory === 'xp' ? 'overall' : initialCategory)
+
+watch(() => route.query.category, (newQueryCategory) => {
+  const newCategory = (newQueryCategory as CategoryCode) || 'overall'
+  const resolvedCategory = newCategory === 'xp' ? 'overall' : newCategory
+  if (activeCategory.value !== resolvedCategory) {
+    activeCategory.value = resolvedCategory
+  }
+})
+
 const scoreSearch = ref('')
 
 const profileTabs = [
@@ -138,7 +147,21 @@ async function fetchProfile() {
 }
 
 watch(userId, () => { fetchProfile() }, { immediate: true })
-watch(activeCategory, () => { if (user.value) fetchStatsDiff() })
+watch(activeCategory, (newCategory) => {
+  if (user.value) fetchStatsDiff()
+
+  const queryCategory = (route.query.category as CategoryCode) || 'overall'
+  if (queryCategory === newCategory) return
+
+  const query = { ...route.query }
+  if (newCategory === 'overall') {
+    delete query.category
+  } else {
+    query.category = newCategory
+  }
+  delete query.page
+  router.replace({ query })
+})
 </script>
 
 <template>

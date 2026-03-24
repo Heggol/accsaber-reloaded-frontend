@@ -136,8 +136,6 @@ function openDetail(diffId: string, event: Event) {
 
 watch(() => props.search, () => { resetPage() })
 
-watch(() => props.category, () => { resetPage() })
-
 watch(
   [() => props.userId, () => props.category, paginationParams, () => props.search],
   () => { fetchScores() },
