@@ -215,7 +215,7 @@ watch(
           <GlowImage :src="(row.avatarUrl as string)" :alt="(row.userName as string)" />
           <PlayerTooltipTrigger :user-id="(row._userId as string)" :user-name="(row.userName as string)"
             :avatar-url="(row.avatarUrl as string)" :country="(row.country as string)">
-            <span class="map-scores__name">{{ row.userName }}</span>
+            <span class="map-scores__name" :title="(row.userName as string)">{{ (row.userName as string).length > 22 ? (row.userName as string).slice(0, 24) + '…' : row.userName }}</span>
             <CountryFlag :country="(row.country as string)" />
           </PlayerTooltipTrigger>
         </div>
@@ -246,7 +246,7 @@ watch(
           </span>
           <GlowImage :src="(row.avatarUrl as string)" :alt="(row.userName as string)" :size="28" />
           <div class="ms-card__info">
-            <span class="ms-card__name">{{ row.userName }}</span>
+            <span class="ms-card__name" :title="(row.userName as string)">{{ (row.userName as string).length > 24 ? (row.userName as string).slice(0, 24) + '…' : row.userName }}</span>
             <CountryFlag :country="(row.country as string)" />
           </div>
           <div class="ms-card__stats">
