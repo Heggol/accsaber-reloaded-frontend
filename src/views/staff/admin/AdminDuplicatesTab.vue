@@ -119,8 +119,8 @@ async function createManualLink() {
   try {
     const { createDuplicateLink } = await import('@/api/admin/duplicates')
     const created = await createDuplicateLink({
-      primaryUserId: Number(manualPrimary.value),
-      secondaryUserId: Number(manualSecondary.value),
+      primaryUserId: manualPrimary.value,
+      secondaryUserId: manualSecondary.value,
       reason: manualReason.value || undefined,
     })
     links.value.unshift(created)

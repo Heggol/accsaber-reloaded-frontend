@@ -98,9 +98,9 @@ export interface BulkUnrankRequest {
   mapDifficultyIds: string[]
 }
 export interface DuplicateCandidateResponse {
-  primaryUserId: number
+  primaryUserId: string
   primaryUserName: string
-  secondaryUserId: number
+  secondaryUserId: string
   secondaryUserName: string
   country: string
   identicalScores: number
@@ -110,9 +110,9 @@ export interface DuplicateCandidateResponse {
 
 export interface DuplicateLinkResponse {
   id: string
-  primaryUserId: number
+  primaryUserId: string
   primaryUserName: string
-  secondaryUserId: number
+  secondaryUserId: string
   secondaryUserName: string
   merged: boolean
   mergedAt: string | null
@@ -121,14 +121,14 @@ export interface DuplicateLinkResponse {
 }
 
 export interface CreateDuplicateLinkRequest {
-  primaryUserId: number
-  secondaryUserId: number
+  primaryUserId: string
+  secondaryUserId: string
   reason?: string
 }
 
 export interface MergeDuplicateRequest {
-  primaryUserId: number
-  secondaryUserId: number
+  primaryUserId: string
+  secondaryUserId: string
   reason?: string
 }
 export interface CreateCurveRequest {

@@ -51,7 +51,9 @@ async function request<T>(method: string, path: string, body?: unknown): Promise
 
   if (res.status === 204) return undefined as T
 
-  return res.json() as Promise<T>
+  const text = await res.text()
+  const sanitizedJsonText = text.replace(/:\s*(\d{16,})/g, ': "$1"')
+  return JSON.parse(sanitizedJsonText) as T
 }
 
 export function get<T>(path: string): Promise<T> {
