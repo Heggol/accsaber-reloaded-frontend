@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import MilestoneHolderTooltip from '@/components/domain/MilestoneHolderTooltip.vue';
 import type { MilestoneCompletionResponse } from '@/types/api/milestones';
-import { tierColor as getTierColor } from '@/utils/constants';
+import { tierColor as getTierColor, formatPercent } from '@/utils/constants';
 import { formatDifficulty } from '@/utils/mappers';
 import { computed, ref } from 'vue';
 
@@ -23,7 +23,7 @@ const expanded = ref(false)
 
 const completionText = computed(() => {
   const { completions, totalPlayers, completionPercentage } = props.milestone
-  return `${completions ?? 0}/${totalPlayers ?? 0} players (${(completionPercentage ?? 0).toFixed(1)}%)`
+  return `${completions ?? 0}/${totalPlayers ?? 0} players (${formatPercent(completionPercentage ?? 0)}%)`
 })
 
 const showHolderTooltip = computed(() => (props.milestone.completions ?? 0) > 0 && (props.milestone.completions ?? 0) < 50)
@@ -35,8 +35,12 @@ const accuracy = computed(() => {
 
 const progressPercent = computed(() => {
   if (props.milestone.userProgress == null || !props.milestone.targetValue) return null
-  return Math.min(100, (props.milestone.userProgress / props.milestone.targetValue) * 100)
+  const raw = (props.milestone.userProgress / props.milestone.targetValue) * 100
+  if (!isCompleted.value && raw >= 100) return 99.9
+  return raw
 })
+
+const progressBarWidth = computed(() => Math.min(100, progressPercent.value ?? 0))
 
 const completedAtFormatted = computed(() => {
   if (!props.milestone.userCompletedAt) return null
@@ -98,7 +102,7 @@ function toggleExpand() {
       <div v-if="compact" class="milestone-detail__compact-meta">
         <span class="milestone-detail__xp">{{ milestone.xp }} XP</span>
         <span v-if="progressPercent != null && !isCompleted" class="milestone-detail__progress-label">{{
-          progressPercent.toFixed(1) }}%</span>
+          formatPercent(progressPercent) }}%</span>
         <span class="milestone-detail__completion">{{ completionText }}</span>
         <MilestoneHolderTooltip v-if="showHolderTooltip" :milestone-id="milestone.milestoneId"
           :completions="milestone.completions ?? 0" />
@@ -115,7 +119,7 @@ function toggleExpand() {
 
     <div v-if="compact && progressPercent != null && !isCompleted"
       class="milestone-detail__progress milestone-detail__progress--compact">
-      <div class="milestone-detail__progress-bar" :style="{ width: `${progressPercent}%` }" />
+      <div class="milestone-detail__progress-bar" :style="{ width: `${progressBarWidth}%` }" />
     </div>
 
     <div v-if="compact && hasScoreInfo" class="milestone-detail__dropdown"
@@ -151,8 +155,8 @@ function toggleExpand() {
       </div>
 
       <div v-if="progressPercent != null && !isCompleted" class="milestone-detail__progress">
-        <div class="milestone-detail__progress-bar" :style="{ width: `${progressPercent}%` }" />
-        <span class="milestone-detail__progress-text">{{ progressPercent.toFixed(1) }}%</span>
+        <div class="milestone-detail__progress-bar" :style="{ width: `${progressBarWidth}%` }" />
+        <span class="milestone-detail__progress-text">{{ formatPercent(progressPercent) }}%</span>
       </div>
 
       <div v-if="hasScoreInfo" class="milestone-detail__score">

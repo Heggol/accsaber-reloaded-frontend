@@ -12,7 +12,7 @@ import type { CreateMilestoneRequest, CreateMilestoneSetRequest } from '@/types/
 import type { CategoryResponse } from '@/types/api/categories'
 import type { MilestoneResponse, MilestoneSetResponse, PrerequisiteLinkResponse } from '@/types/api/milestones'
 import type { MilestoneStatus, MilestoneTier, MilestoneType } from '@/types/enums'
-import { TIER_COLORS } from '@/utils/constants'
+import { TIER_COLORS, formatPercent } from '@/utils/constants'
 import { computed, ref, watch } from 'vue'
 
 const categoryStore = useCategoryStore()
@@ -450,7 +450,7 @@ const STATUS_OPTIONS = [
                 </div>
                 <p v-if="m.description" class="milestone-card__desc">{{ m.description }}</p>
                 <div class="milestone-card__meta">
-                  <span class="milestone-card__stat">{{ m.completionPercentage.toFixed(1) }}% completed</span>
+                  <span class="milestone-card__stat">{{ formatPercent(m.completionPercentage) }}% completed</span>
                   <span class="milestone-card__stat">{{ m.completions }} / {{ m.totalPlayers }} players</span>
                   <span v-if="m.categoryId" class="milestone-card__stat">
                     {{ categoryStore.byId.get(m.categoryId)?.name ?? m.categoryId }}

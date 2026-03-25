@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { useCategoryStore } from '@/stores/categories';
 import type { MilestoneDisplay } from '@/types/display';
-import { tierColor as getTierColor } from '@/utils/constants';
+import { tierColor as getTierColor, formatPercent } from '@/utils/constants';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -17,12 +17,16 @@ const accentColor = computed(() =>
   props.milestone.categoryCode ? categoryStore.getAccent(props.milestone.categoryCode) : undefined,
 )
 
-const completionText = computed(() => `${props.milestone.completionPercent.toFixed(1)}% of players`)
+const completionText = computed(() => `${formatPercent(props.milestone.completionPercent)}% of players`)
 
 const progressPercent = computed(() => {
   if (props.milestone.userProgress == null || !props.milestone.targetValue) return null
-  return Math.min(100, (props.milestone.userProgress / props.milestone.targetValue) * 100)
+  const raw = (props.milestone.userProgress / props.milestone.targetValue) * 100
+  if (!props.milestone.isCompleted && raw >= 100) return 99.9
+  return raw
 })
+
+const progressBarWidth = computed(() => Math.min(100, progressPercent.value ?? 0))
 </script>
 
 <template>
@@ -63,8 +67,8 @@ const progressPercent = computed(() => {
       <span class="milestone-card__completion">{{ completionText }}</span>
     </div>
     <div v-if="progressPercent != null" class="milestone-card__progress">
-      <div class="milestone-card__progress-bar" :style="{ width: `${progressPercent}%` }" />
-      <span class="milestone-card__progress-text">{{ progressPercent.toFixed(1) }}%</span>
+      <div class="milestone-card__progress-bar" :style="{ width: `${progressBarWidth}%` }" />
+      <span class="milestone-card__progress-text">{{ formatPercent(progressPercent) }}%</span>
     </div>
   </div>
 </template>

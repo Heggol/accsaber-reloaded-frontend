@@ -79,6 +79,22 @@ export function hashString(str: string): number {
   return Math.abs(hash)
 }
 
+export function formatPercent(value: number, decimals = 1): string {
+  if (value >= 100) return '100'
+  if (value <= 0) return '0'
+  const formatted = value.toFixed(decimals)
+  if (formatted === (100).toFixed(decimals)) {
+    return (100 - Math.pow(10, -decimals)).toFixed(decimals)
+  }
+  if (formatted === (0).toFixed(decimals)) {
+    for (let d = decimals + 1; d <= 10; d++) {
+      const attempt = value.toFixed(d)
+      if (parseFloat(attempt) > 0) return attempt
+    }
+  }
+  return formatted
+}
+
 export function seededRandom(seed: number): number {
   const x = Math.sin(seed * 9301 + 49297) * 49297
   return x - Math.floor(x)

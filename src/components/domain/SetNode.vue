@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { MilestoneSetResponse } from '@/types/api/milestones';
+import { formatPercent } from '@/utils/constants';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -29,7 +30,7 @@ const glowIntensity = computed(() => 8 + 32 * completionFraction.value)
 const ariaLabel = computed(() =>
   props.locked
     ? `${props.set.title} - Locked`
-    : `${props.set.title} - ${props.milestoneCount} milestones - ${Math.round(props.completionPercentage)}% complete`,
+    : `${props.set.title} - ${props.milestoneCount} milestones - ${formatPercent(props.completionPercentage, 0)}% complete`,
 )
 </script>
 
