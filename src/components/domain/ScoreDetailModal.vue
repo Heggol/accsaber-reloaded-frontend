@@ -321,6 +321,14 @@ watch(
           <BaseButton
             v-if="score.blScoreId"
             size="sm"
+            :href="`https://allpoland.github.io/ArcViewer/?scoreID=${score.blScoreId}`"
+          >
+            <img src="https://beatleader.com/assets/ArcViewerIcon.webp" alt="ArcViewer" width="20" height="20" style="border-radius: 3px;" />
+            ArcViewer
+          </BaseButton>
+          <BaseButton
+            v-if="score.blScoreId"
+            size="sm"
             :href="`https://beatleader.com/score/${score.blScoreId}`"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
