@@ -14,6 +14,7 @@ import MapCard from '@/components/domain/MapCard.vue'
 import MapCardCompact from '@/components/domain/MapCardCompact.vue'
 import { usePageableRoute } from '@/composables/usePageableRoute'
 import { usePlaylistDownload } from '@/composables/usePlaylistDownload'
+import { useAuthStore } from '@/stores/auth'
 import { useCategoryStore } from '@/stores/categories'
 import type { BatchResponse } from '@/types/api/batches'
 import type { MapDifficultyResponse } from '@/types/api/maps'
@@ -28,6 +29,7 @@ import MapFilterSidebar from './maps/MapFilterSidebar.vue'
 const route = useRoute()
 const router = useRouter()
 const categoryStore = useCategoryStore()
+const authStore = useAuthStore()
 
 const CATEGORY_ORDER = ['true_acc', 'standard_acc', 'tech_acc', 'low_mid', 'overall']
 
@@ -54,6 +56,20 @@ const viewMode = computed<ViewMode>({
 
 const filtersOpen = ref(false)
 const searchQuery = ref('')
+
+const unplayedOnly = computed<boolean>({
+  get() { return route.query.unplayed === 'true' },
+  set(val) {
+    const query = { ...route.query }
+    if (val) {
+      query.unplayed = 'true'
+    } else {
+      delete query.unplayed
+    }
+    delete query.page
+    router.replace({ query })
+  },
+})
 const playlistDropdownOpen = ref(false)
 const { playlistCategories, downloadPlaylist: dlPlaylist } = usePlaylistDownload()
 
@@ -106,7 +122,7 @@ const complexityRange = computed<[number, number]>({
 })
 
 const hasActiveFilters = computed(() =>
-  selectedCategories.value.length > 0 || complexityRange.value[0] > 0 || complexityRange.value[1] < 20
+  selectedCategories.value.length > 0 || complexityRange.value[0] > 0 || complexityRange.value[1] < 20 || unplayedOnly.value
 )
 
 const sortOptions = [
@@ -214,7 +230,6 @@ const isBatchView = computed(() => viewMode.value === 'batch')
 async function fetchDifficulties() {
   loading.value = true
   try {
-    const { getDifficulties } = await import('@/api/maps')
     const params: Record<string, unknown> = { ...paginationParams.value, status: 'RANKED' }
     if (selectedCategories.value.length === 1) {
       params.categoryId = selectedCategories.value[0]
@@ -228,7 +243,14 @@ async function fetchDifficulties() {
     if (searchQuery.value.trim()) {
       params.search = searchQuery.value.trim()
     }
-    const res: Page<MapDifficultyResponse> = await getDifficulties(params as never)
+    let res: Page<MapDifficultyResponse>
+    if (unplayedOnly.value && authStore.userId) {
+      const { getUserMissingMaps } = await import('@/api/users')
+      res = await getUserMissingMaps(authStore.userId, params as never)
+    } else {
+      const { getDifficulties } = await import('@/api/maps')
+      res = await getDifficulties(params as never)
+    }
     difficulties.value = res.content
     totalPages.value = res.totalPages
     totalElements.value = res.totalElements
@@ -303,7 +325,7 @@ watch(searchQuery, () => {
 })
 
 watch(
-  [paginationParams, selectedCategories, complexityRange, searchQuery],
+  [paginationParams, selectedCategories, complexityRange, searchQuery, unplayedOnly],
   () => { if (!isBatchView.value) fetchDifficulties() },
   { immediate: true, deep: true },
 )
@@ -361,7 +383,7 @@ watch(
           @update:model-value="setSort($event)" />
         <BaseSelect v-if="isBatchView" :options="batchSortOptions" :model-value="batchSortKey"
           @update:model-value="batchSortKey = $event" />
-        <SearchBox v-model="searchQuery" placeholder="Search maps..." />
+        <SearchBox v-if="!isBatchView" v-model="searchQuery" placeholder="Search maps..." />
       </div>
       <div class="maps-page__controls-right">
         <div class="maps-page__view-toggle" role="radiogroup" aria-label="View mode">
@@ -411,8 +433,10 @@ watch(
             </button>
           </template>
           <MapFilterSidebar :selected-categories="selectedCategories" :complexity-range="complexityRange"
+            :unplayed-only="unplayedOnly" :show-unplayed="authStore.isLoggedIn"
             @update:selected-categories="selectedCategories = $event"
-            @update:complexity-range="complexityRange = $event" />
+            @update:complexity-range="complexityRange = $event"
+            @update:unplayed-only="unplayedOnly = $event" />
         </FilterPopover>
       </div>
     </div>

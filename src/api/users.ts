@@ -1,4 +1,5 @@
 import type { CampaignProgressResponse } from '@/types/api/campaigns'
+import type { DifficultyListParams, MapDifficultyResponse } from '@/types/api/maps'
 import type {
   HistoricScoresParams,
   HistoricStatisticsParams,
@@ -86,6 +87,13 @@ export function getUserCompletedMilestones(
   userId: string,
 ): Promise<UserMilestoneProgressResponse[]> {
   return get<UserMilestoneProgressResponse[]>(`/users/${userId}/milestones/completed`)
+}
+
+export function getUserMissingMaps(
+  userId: string,
+  params?: DifficultyListParams,
+): Promise<Page<MapDifficultyResponse>> {
+  return get<Page<MapDifficultyResponse>>(`/users/${userId}/missing-maps${buildQuery(params)}`)
 }
 
 export function getUserScoresHistoric(

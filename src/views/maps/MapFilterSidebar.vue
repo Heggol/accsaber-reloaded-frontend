@@ -6,17 +6,20 @@ import { computed, ref, watch } from 'vue'
 const props = defineProps<{
   selectedCategories: string[]
   complexityRange: [number, number]
+  unplayedOnly?: boolean
+  showUnplayed?: boolean
 }>()
 
 const emit = defineEmits<{
   'update:selectedCategories': [categories: string[]]
   'update:complexityRange': [range: [number, number]]
+  'update:unplayedOnly': [value: boolean]
 }>()
 
 const categoryStore = useCategoryStore()
 
 const filterableCategories = computed(() =>
-  categoryStore.categoryInfoList.filter((c) => c.code !== 'overall')
+  categoryStore.categoryInfoList.filter((c) => c.code !== 'overall' && c.code !== 'xp')
 )
 
 const localRange = ref<[number, number]>([...props.complexityRange])
@@ -80,6 +83,20 @@ function toggleCategory(categoryId: string, selected: string[]) {
         @update:model-value="onRangeChange"
       />
     </div>
+
+    <div v-if="showUnplayed" class="map-filters__section">
+      <h4 class="map-filters__heading">Player</h4>
+      <label class="map-filters__cat-label">
+        <input
+          type="checkbox"
+          class="map-filters__checkbox"
+          :checked="unplayedOnly"
+          @change="emit('update:unplayedOnly', !unplayedOnly)"
+        />
+        <span class="map-filters__cat-dot map-filters__cat-dot--unplayed" />
+        <span>Unplayed only</span>
+      </label>
+    </div>
   </div>
 </template>
 
@@ -137,5 +154,9 @@ function toggleCategory(categoryId: string, selected: string[]) {
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+}
+
+.map-filters__cat-dot--unplayed {
+  background: var(--info);
 }
 </style>
